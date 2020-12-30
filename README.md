@@ -1,5 +1,8 @@
 # gnize-pictures
 
+Gallery for my images and videos, served by a flask server.
+Backend serves files from disk
+
 ## Project setup
 ```
 yarn install
