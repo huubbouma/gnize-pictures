@@ -1,0 +1,11 @@
+settings/production.cfg
+questanalyzer.db
+
+MOD_WSGI_EXPRESS.txt
+VENV/
+mod_wsgi_express/
+production.wsgi
+
+*.pyc
+__pycache__
+
