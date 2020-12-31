@@ -9,6 +9,7 @@ const store = createStore({
     token: '',
     status: '',
     storeLoaded: false,
+    routeChanged: 0,
   },
 
   mutations: {
@@ -45,9 +46,11 @@ const store = createStore({
       const changeState = state;
       changeState.storeLoaded = payload;
     },
-
     resetState(state, payload) {
       this.replaceState(Object.assign(state, payload));
+    },
+    incrementRouteChanged(state) {
+      state.routeChanged += 1;
     },
   },
 
@@ -172,6 +175,9 @@ const store = createStore({
       }
       return null;
     },
+    routeChanged(state) {
+      return state.routeChanged;
+    }
   },
 });
 

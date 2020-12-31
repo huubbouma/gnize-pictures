@@ -1,5 +1,5 @@
 <template>
-  <div class="lightbox" @click.self="closeLightbox()" tabindex="0">
+  <div v-if="item" class="lightbox" @click.self="closeLightbox()" tabindex="0">
 
     <img v-if="item.type === 'image'" :src="item.src" />
     <video ref="video" controls autoplay v-if="item.type === 'video'">
@@ -24,6 +24,9 @@
 </template>
 
 <script>
+
+import { mapGetters } from 'vuex';
+
 export default {
   name: 'Overlay',
   emits: ['close', 'previous', 'next'],
@@ -31,6 +34,9 @@ export default {
     item: {
       required: true,
     },
+  },
+  computed: {
+    ...mapGetters(['routeChanged']),
   },
   methods: {
     closeLightbox() {
@@ -63,6 +69,9 @@ export default {
         video.load();
       }
     },
+    routeChanged() {
+      this.closeLightbox();
+    }
   },
   mounted() {
     document.addEventListener('keydown', this.handleKeydown);
@@ -77,6 +86,10 @@ export default {
 
 <style lang="scss" scoped>
 
+*:focus {
+    outline: none;
+}
+
 img, video {
   user-select: none;
 }
@@ -86,6 +99,7 @@ video {
 }
 
 .lightbox {
+  user-select: none;
   position: fixed;
   top: 0;
   left: 0;

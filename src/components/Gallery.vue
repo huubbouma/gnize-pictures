@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="wrapper">
     <ul class="gallery">
       <li class="gallery-panel" v-for="(item, index) in media" :key="item.id">
         <img @click="showInOverlay(index)" :src="item.thumb" />
@@ -56,13 +56,22 @@ export default {
       this.showOverlay = false;
     },
   },
+  mounted() {
+    this.showOverlay = false;
+    this.currentIndex = 0;
+  },
 };
 </script>
 
 <style lang="scss" scoped>
 // BASIC
 
+.wrapper {
+  user-select: none;
+}
+
 ul {
+  user-select: none;
   display: flex;
   flex-wrap: wrap;
   list-style-type: none;
@@ -70,12 +79,14 @@ ul {
 }
 
 li {
+  user-select: none;  
   height: 30vh;
   flex-grow: 0;
   // flex-grow: 1;
 }
 
 img {
+  user-select: none;  
   max-height: 100%;
   min-width: 100%;
   object-fit: cover;

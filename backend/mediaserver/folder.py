@@ -29,7 +29,22 @@ imagetypes = [
     ".tiff",
     "bmp",
 ]
-movietypes = ["mp4", "webm"]
+
+all_movietypes = [
+    "avi",
+    "mpg",
+    "mpeg",
+    "mov",
+    "mjpg",
+    "mjpeg",
+    "mp4",
+    "ogv",
+    "webm",
+    "3gp",
+]
+supported_html5_movietypes = [
+    "mp4",
+]
 # thumbnail_size = (400, 400)
 # preview_size = (800, 800)
 # web_size = (1600, 1600)
@@ -83,11 +98,17 @@ def get_media(path):
                     {"id": quote(item), "name": item, "type": "image", "ext": ext}
                 )
 
-        for ext in movietypes:
+        for ext in all_movietypes:
             if item.lower().endswith(ext):
-                media.append(
-                    {"id": quote(item), "name": item, "type": "movie", "ext": ext}
-                )
+                for html5_ext in supported_html5_movietypes:
+                    media.append(
+                        {
+                            "id": quote(item),
+                            "name": item,
+                            "type": "movie",
+                            "ext": html5_ext,
+                        }
+                    )
 
     return media
 

@@ -30,6 +30,8 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  store.commit('incrementRouteChanged');
+
   if (to.matched.some(record => record.meta.requiresAuth)) {
     store.dispatch('initialiseStore').then(() => {
       if (store.getters.isLoggedIn) {

@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="wrapper">
     <Breadcrumb :home="home" :model="breadcrumItems" />
 
-    <div v-if="listing">
+    <div class="listing" v-if="listing">
       <ul>
         <li v-for="folder in listing.folders" :key="folder.id">
           <router-link :to="{ name: 'Main', params: { path: `${path}/${folder.id}` } }">{{
@@ -89,7 +89,7 @@ export default {
             props = {
               id: item.id,
               type: 'image',
-              src: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${this.path}/${item.id}&size=web`,
+              src: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${this.path}/${item.id}&size=preview`,
               thumb: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${this.path}/${item.id}&size=thumbnail`,
               caption: item.name,
             };
@@ -114,6 +114,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+.wrapper, .listing, ul, li {
+  user-select: none;
+}
+
 li a {
   color: lightgray;
 }
