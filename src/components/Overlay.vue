@@ -1,6 +1,5 @@
 <template>
   <div v-if="item" class="lightbox" @click.self="closeLightbox()" tabindex="0">
-
     <img v-if="item.type === 'image'" :src="item.src" />
     <video ref="video" controls autoplay v-if="item.type === 'video'">
       <source
@@ -18,13 +17,10 @@
     <div class="arrow" id="right-arrow" v-on:click="next">
       <i class="pi pi-arrow-circle-right" style="font-size: 3em"></i>
     </div>
-
-
   </div>
 </template>
 
 <script>
-
 import { mapGetters } from 'vuex';
 
 export default {
@@ -71,7 +67,7 @@ export default {
     },
     routeChanged() {
       this.closeLightbox();
-    }
+    },
   },
   mounted() {
     document.addEventListener('keydown', this.handleKeydown);
@@ -85,12 +81,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 *:focus {
-    outline: none;
+  outline: none;
 }
 
-img, video {
+img,
+video {
   user-select: none;
 }
 
@@ -107,7 +103,8 @@ video {
   height: 100%;
   background-color: rgba(0, 0, 0, 1);
 
-  img, video {  
+  img,
+  video {
     max-width: 100%;
     max-height: 100%;
     bottom: 0;
@@ -128,15 +125,22 @@ video {
     top: 0;
     opacity: 0;
 
-    &:hover {
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        cursor: pointer;
+        opacity: 0.5;
+      }
+    }
+
+    &:active {
       cursor: pointer;
-      color: white;
       opacity: 0.5;
     }
 
     i {
       top: 40%;
       position: absolute;
+      color: white;
     }
 
     &#left-arrow {
