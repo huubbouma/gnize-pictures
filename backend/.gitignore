@@ -1,5 +1,6 @@
 settings/production.cfg
 questanalyzer.db
+mediaserver.db
 
 MOD_WSGI_EXPRESS.txt
 VENV/
