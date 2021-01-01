@@ -16,6 +16,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import Overlay from './Overlay.vue';
 
 export default {
@@ -36,28 +37,36 @@ export default {
     };
   },
   computed: {
-    currentItem() {
-      return this.media[this.currentIndex];
-    },
+    ...mapGetters(['currentItem']),
   },
+  watch: {
+    currentItem(newValue) {
+      if (newValue) {
+        this.showOverlay = true;
+      } else {
+        this.showOverlay = false;
+      }
+    }
+  },  
   methods: {
     showPrevious() {
       this.currentIndex = this.currentIndex === 0 ? this.media.length - 1 : this.currentIndex - 1;
+      this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
     showNext() {
       this.currentIndex = this.currentIndex === this.media.length - 1 ? 0 : this.currentIndex + 1;
+      this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
 
     showInOverlay(index) {
       this.currentIndex = index;
-      this.showOverlay = true;
+      this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
     closeOverlay() {
-      this.showOverlay = false;
+      this.$store.commit('setCurrentItem', null);
     },
   },
   mounted() {
-    this.showOverlay = false;
     this.currentIndex = 0;
   },
 };
@@ -79,14 +88,14 @@ ul {
 }
 
 li {
-  user-select: none;  
+  user-select: none;
   height: 30vh;
   flex-grow: 0;
   // flex-grow: 1;
 }
 
 img {
-  user-select: none;  
+  user-select: none;
   max-height: 100%;
   min-width: 100%;
   object-fit: cover;

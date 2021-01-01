@@ -5,7 +5,7 @@
     <div class="listing" v-if="listing">
       <ul>
         <li v-for="folder in listing.folders" :key="folder.id">
-          <router-link :to="{ name: 'Main', params: { path: `${path}/${folder.id}` } }">{{
+          <router-link :to="{ name: 'Main', params: { path: getPath(folder.id) } }">{{
             folder.name
           }}</router-link>
         </li>
@@ -25,7 +25,7 @@ export default {
   props: {
     path: {
       required: true,
-      type: String,
+      type: Array,
     },
   },
 
@@ -37,9 +37,15 @@ export default {
   },
   components: { Gallery },
   methods: {
+    getPath(item) {
+      const newPath = [...this.path];
+      newPath.push(item);
+      return newPath;
+    },
     getListing() {
+      const filePath = this.path.join('/');
       this.$http
-        .get(`${process.env.VUE_APP_MEDIASERVER_URL}/folder/list/?path=${this.path}`)
+        .get(`${process.env.VUE_APP_MEDIASERVER_URL}/folder/list/?path=${filePath}`)
         .then((response) => {
           this.listing = response.data;
         });
@@ -49,15 +55,11 @@ export default {
     breadcrumItems() {
       const hist = [];
       const items = this.path
-        .split('/')
-        .filter((item) => {
-          return item;
-        })
         .map((item) => {
           hist.push(item);
           return {
             label: decodeURIComponent(item),
-            to: encodeURIComponent(`/${hist.join('/')}`),
+            to: `/${hist.join('/')}`,
           };
         });
       return items;
@@ -67,14 +69,16 @@ export default {
       let result = [];
       if (this.listing.media) {
         result = this.listing.media.map((item) => {
+          const filePath = this.path.join('/');
           let props = null;
           if (item.type === 'movie') {
             props = {
               type: 'video',
               id: item.id,
+              folderPath: this.path,
               sources: [
                 {
-                  src: `${process.env.VUE_APP_MEDIASERVER_URL}/media/movie/?path=${this.path}/${item.id}&movie_type=${item.ext}`,
+                  src: `${process.env.VUE_APP_MEDIASERVER_URL}/media/movie/?path=${filePath}/${item.id}&movie_type=${item.ext}`,
                   type: `video/${item.ext}`,
                 },
               ],
@@ -88,9 +92,10 @@ export default {
           if (item.type === 'image') {
             props = {
               id: item.id,
+              folderPath: this.path,
               type: 'image',
-              src: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${this.path}/${item.id}&size=preview`,
-              thumb: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${this.path}/${item.id}&size=thumbnail`,
+              src: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${filePath}/${item.id}&size=web`,
+              thumb: `${process.env.VUE_APP_MEDIASERVER_URL}/media/image/?path=${filePath}/${item.id}&size=thumbnail`,
               caption: item.name,
             };
           }
@@ -114,8 +119,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
-.wrapper, .listing, ul, li {
+.wrapper,
+.listing,
+ul,
+li {
   user-select: none;
 }
 

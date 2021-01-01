@@ -5,6 +5,7 @@
 
 class BaseConfig(object):
     DEBUG = True
+    ANONYMOUS_ACCESS = False
     SECRET_KEY = 'ninahagenisdood'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///mediaserver.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

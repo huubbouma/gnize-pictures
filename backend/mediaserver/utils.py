@@ -8,6 +8,10 @@ def token_required(f):
     @wraps(f)
     def _verify(*args, **kwargs):
 
+        if current_app.config["ANONYMOUS_ACCESS"]:
+            kwargs["user"] = User(email='bobdobalina@localhost', password='-', access=0)
+            return f(*args, **kwargs)
+
         token = request.headers.get("Authorization", "")
 
         invalid_msg = {
@@ -20,7 +24,7 @@ def token_required(f):
         }
 
         # if len(auth_headers) != 2:
-        #     return invalid_msg, 401
+        #     return invalid_msg, 401        
 
         try:
             # token = auth_headers[1]
@@ -61,6 +65,10 @@ def requires_access_level(access_level):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
+
+            if current_app.config["ANONYMOUS_ACCESS"]:
+                kwargs["user"] = User(email='bobdobalina@localhost', password='-', access=0)
+                return f(*args, **kwargs)
 
             try:
                 token = request.headers.get("Authorization", "")

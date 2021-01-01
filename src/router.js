@@ -5,7 +5,7 @@ import Login from './views/Login.vue';
 
 const routes = [
   {
-    path: '/:path?',
+    path: '/:path*',
     name: 'Main',
     props: true,
     component: Main,
@@ -30,7 +30,12 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  store.commit('incrementRouteChanged');
+  // check if we're in a ovrelay. If we are, just close it
+  if (store.getters.currentItem) {
+    store.commit('setCurrentItem', null);
+    next(false);
+    return;
+  }
 
   if (to.matched.some(record => record.meta.requiresAuth)) {
     store.dispatch('initialiseStore').then(() => {

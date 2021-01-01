@@ -21,8 +21,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-
 export default {
   name: 'Overlay',
   emits: ['close', 'previous', 'next'],
@@ -31,9 +29,7 @@ export default {
       required: true,
     },
   },
-  computed: {
-    ...mapGetters(['routeChanged']),
-  },
+
   methods: {
     closeLightbox() {
       this.$emit('close');
@@ -57,6 +53,16 @@ export default {
         this.closeLightbox();
       }
     },
+    // handlePopstate() {
+    //   // console.log(`location: ${document.location}, state: ${JSON.stringify(event.state)}`);
+    //   // don't go back, but close modal
+    //   console.log("yo");
+    //   // event.preventDefault();
+    //   // event.stopImmediatePropagation()
+    //   window.history.go(1);
+    //   this.closeLightbox();
+
+    // },
   },
   watch: {
     item() {
@@ -65,17 +71,16 @@ export default {
         video.load();
       }
     },
-    routeChanged() {
-      this.closeLightbox();
-    },
   },
   mounted() {
     document.addEventListener('keydown', this.handleKeydown);
     document.body.classList.add('modal-open');
+    // window.onpopstate = this.handlePopstate;
   },
   unmounted() {
     document.removeEventListener('keydown', this.handleKeydown);
     document.body.classList.remove('modal-open');
+    // window.onpopstate = () => {}
   },
 };
 </script>
