@@ -1,10 +1,8 @@
 <template>
   <div id="gnize-pictures">
-    <Toast/>
+    <Toast />
     <router-view />
   </div>
-
-
 </template>
 
 <script>
@@ -28,7 +26,12 @@ export default {
       (err) =>
         new Promise(() => {
           /* eslint no-underscore-dangle: 0 */
-          if (err.response.status === 401 && err.config && !err.config.__isRetryRequest) {
+          if (
+            // err.response &&
+            err.response.status === 401 &&
+            err.config &&
+            !err.config.__isRetryRequest
+          ) {
             this.$store.dispatch('AUTH_LOGOUT');
           }
           throw err;
@@ -48,13 +51,12 @@ export default {
 </script>
 
 <style>
-
 body.modal-open {
   overflow: hidden;
 }
 
 body {
-  background-color: rgba(0, 0, 0, 1);  
+  background-color: rgba(0, 0, 0, 1);
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -63,5 +65,4 @@ body {
 .app-container {
   text-align: center;
 }
-
 </style>

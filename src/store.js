@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { createStore } from 'vuex';
+import throttle from 'lodash.throttle';
 import MediaService from './services/MediaService';
 
 const store = createStore({
@@ -10,6 +11,8 @@ const store = createStore({
     status: '',
     storeLoaded: false,
     currentItem: null,
+    showFileOperations: false,
+    itemsToDelete: {}, // should be a Set() ?
   },
 
   mutations: {
@@ -51,6 +54,21 @@ const store = createStore({
     },
     setCurrentItem(state, payload) {
       state.currentItem = payload;
+    },
+    setShowFileOperations(state, payload) {
+      state.showFileOperations = payload;
+    },
+
+    addItemToDelete(state, item) {
+      const key = item.path;
+      state.itemsToDelete[key] = item;
+    },
+    removeItemToDelete(state, item) {
+      const key = item.path;
+      delete state.itemsToDelete[key];
+    },
+    clearItemsToDelete(state) {
+      state.itemsToDelete = {};
     }
   },
 
@@ -133,6 +151,26 @@ const store = createStore({
         resolve();
       });
     },
+
+    REMOVE_ITEMS({ commit, getters }) {
+      const throttledDelete = throttle(MediaService.delete, 5000);
+      return new Promise((resolve, reject) => {
+        const todo = Object.values(getters.getItemsToDelete);
+        const all = [];
+        todo.forEach(item => {
+          all.push(throttledDelete(item).then(() => {
+            commit('removeItemToDelete', item);
+          }));
+        });
+        Promise.all(all)
+          .then(() => {
+            resolve();
+          })
+          .catch(error => {
+            reject(error);
+          });
+      });
+    },
   },
 
   getters: {
@@ -177,7 +215,13 @@ const store = createStore({
     },
     currentItem(state) {
       return state.currentItem;
-    }
+    },
+    showFileOperations(state) {
+      return state.showFileOperations;
+    },
+    getItemsToDelete(state) {
+      return state.itemsToDelete;
+    },
   },
 });
 
@@ -187,6 +231,8 @@ store.subscribe((mutation, state) => {
     user: state.user,
     token: state.token,
     status: state.status,
+    showFileOperations: state.showFileOperations,
+    itemsToDelete: state.itemsToDelete,
   };
 
   localStorage.setItem('store', JSON.stringify(itemsToStore));

@@ -1,9 +1,19 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import Main from '@/views/Main.vue';
+import Admin from '@/views/Admin.vue';
 import store from './store';
 import Login from './views/Login.vue';
 
 const routes = [
+  {
+    path: '/:path*/!:itemId?',
+    name: 'MainDetail',
+    props: true,
+    component: Main,
+    meta: {
+      requiresAuth: true,
+    },
+  },
   {
     path: '/:path*',
     name: 'Main',
@@ -14,12 +24,22 @@ const routes = [
     },
   },
   {
-    path: '/login/:nextUrl?',
+    path: '/@login/:nextUrl?',
     name: 'Login',
     props: true,
     component: Login,
     meta: {
       requiresAuth: false,
+    },
+  },
+  {
+    path: '/@admin',
+    name: 'Admin',
+    props: false,
+    component: Admin,
+    meta: {
+      requiresAuth: true,
+      requiresAccess: 'admin',
     },
   },
 ];
@@ -30,24 +50,37 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  // check if we're in a ovrelay. If we are, just close it
-  if (store.getters.currentItem) {
+  // check if we're in a overlay. If we are, just close it
+  const { currentItem } = store.getters;
+  if (currentItem && currentItem.folderPath) {
+    const folderPath = `/${currentItem.folderUri}`;
+    window.history.pushState({}, null, folderPath);
     store.commit('setCurrentItem', null);
     next(false);
     return;
   }
 
-  if (to.matched.some(record => record.meta.requiresAuth)) {
+  const requiresAccess = to.matched
+    .filter(record => record.meta.requiresAccess)
+    .map(record => record.meta.requiresAccess);
+  const requiresAuth = requiresAccess.length || to.matched.some(record => record.meta.requiresAuth);
+
+  if (requiresAuth || requiresAccess.length) {
     store.dispatch('initialiseStore').then(() => {
-      if (store.getters.isLoggedIn) {
-        next();
-      } else {
+      const { role } = store.getters;
+      const correctAccess = !requiresAccess.length || requiresAccess.includes(role);
+      const { isLoggedIn } = store.getters;
+      if (!isLoggedIn || !correctAccess) {
         next({ name: 'Login', params: { nextUrl: to.fullPath }, replace: true });
+      } else {
+        next();
       }
     });
   } else {
     next();
   }
+
+  // return true;
 });
 
 export default router;

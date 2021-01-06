@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>Login</h1>
+    <Breadcrumb v-if="isAuthenticated" :home="home" :model="breadcrumbs" />
     <LoginComponent />
   </div>
 </template>
@@ -17,6 +17,13 @@ export default {
       type: String,
     },
   },
+  data() {
+    return {
+      home: { icon: 'pi pi-home', to: '/' },
+      breadcrumbs: [],
+    };
+  },
+
   components: { LoginComponent },
   computed: {
     ...mapGetters(['isAuthenticated']),

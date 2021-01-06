@@ -1,8 +1,9 @@
 <template>
   <div class="wrapper">
     <ul class="gallery">
-      <li class="gallery-panel" v-for="(item, index) in media" :key="item.id">
+      <li class="gallery-panel" v-for="(item, index) in media" :key="item.path">
         <img @click="showInOverlay(index)" :src="item.thumb" />
+        <DeleteItem :item="item" :keyHandler="false"/>
       </li>
     </ul>
     <Overlay
@@ -18,26 +19,33 @@
 <script>
 import { mapGetters } from 'vuex';
 import Overlay from './Overlay.vue';
+import DeleteItem from './DeleteItem.vue';
 
 export default {
   name: 'Gallery',
 
-  components: { Overlay },
+  components: { Overlay, DeleteItem },
 
   props: {
     media: {
       required: true,
       type: Array,
     },
+    itemId: {
+      required: false,
+      type: String,
+    },
   },
   data() {
     return {
+      showPictures: true,
+      showVideos: true,
       showOverlay: false,
       currentIndex: 0,
     };
   },
   computed: {
-    ...mapGetters(['currentItem']),
+    ...mapGetters(['currentItem', 'getItemsToDelete']),
   },
   watch: {
     currentItem(newValue) {
@@ -46,8 +54,8 @@ export default {
       } else {
         this.showOverlay = false;
       }
-    }
-  },  
+    },
+  },
   methods: {
     showPrevious() {
       this.currentIndex = this.currentIndex === 0 ? this.media.length - 1 : this.currentIndex - 1;
@@ -63,7 +71,8 @@ export default {
       this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
     closeOverlay() {
-      this.$store.commit('setCurrentItem', null);
+      // this.$store.commit('setCurrentItem', null);
+      this.$router.go(-1);
     },
   },
   mounted() {
@@ -73,7 +82,16 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// BASIC
+
+.gallery-panel {
+  position: relative;
+}
+
+.delete-item {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
 
 .wrapper {
   user-select: none;

@@ -23,4 +23,13 @@ export default class MediaService {
     return axios.post(url);
   }
 
+  static delete(item) {
+    const formData = {
+      path: decodeURI(item.path),
+      action: 'delete',
+    };
+    const mtype = item.type === 'audio' ? 'audio' : 'movie';
+    const url = `${process.env.VUE_APP_MEDIASERVER_URL}/media/${mtype}/`;
+    return axios.post(url, formData);
+  }
 }

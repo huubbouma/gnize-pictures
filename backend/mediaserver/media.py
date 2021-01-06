@@ -30,6 +30,19 @@ resize_map = {
     "web": (1600, 1600),
 }
 
+VIDEO_EXTENSIONS = [
+    "avi",
+    "mpg",
+    "mpeg",
+    "mov",
+    "mjpg",
+    "mjpeg",
+    "mp4",
+    "ogv",
+    "webm",
+    "3gp",
+]
+
 EXIF_ORIENTATION_TAG = 274
 
 
@@ -73,11 +86,76 @@ def cached_file_path(path):
 def cached_folder_path():
     return os.path.dirname(current_app.config["MEDIASERVER_CACHED_PATH"])
 
+
+def delete_image(image_path):
+    removed = []
+    image_path = unquote(image_path)
+
+    if ".." in image_path:
+        raise ValueError("wrong filename")
+
+    real_image_path = original_file_path(image_path)
+    fname = os.path.basename(real_image_path)
+
+    if not os.path.exists(real_image_path):
+        raise ValueError("bad path")
+
+    os.remove(real_image_path)
+    removed.append(real_image_path)
+
+    # also remove the cached (resized) version
+    cached_image_path = cached_file_path(image_path)
+    cached_folder = os.path.dirname(cached_image_path)
+
+    for k in resize_map.keys():
+        cache_fname = ".{}{}".format(k, fname)
+        cached_path = os.path.join(cached_folder, cache_fname)
+        if os.path.exists(cached_path):
+            os.remove(cached_path)
+            removed.append(cached_path)
+
+    return removed
+
+
+def delete_movie(movie_path, movie_type="mp4"):
+
+    removed = []
+    movie_path = unquote(movie_path)
+
+    if ".." in movie_path:
+        raise ValueError("wrong filename")
+
+    real_movie_path = original_file_path(movie_path)
+    orig_folder = os.path.dirname(real_movie_path)
+
+    orig_fname = os.path.basename(real_movie_path)
+    base_name = os.path.splitext(orig_fname)[0]
+
+    for videoextension in VIDEO_EXTENSIONS:
+        ext = ".{}".format(videoextension)
+        fpath = os.path.join(orig_folder, base_name + ext)
+        if os.path.exists(fpath):
+            os.remove(fpath)
+            removed.append(fpath)
+
+    cached_movie_path = cached_file_path(movie_path)
+    cached_folder = os.path.dirname(cached_movie_path)
+
+    for videoextension in VIDEO_EXTENSIONS:
+        fname = base_name + ".converted." + videoextension
+        cached_path = os.path.join(cached_folder, fname)
+        if os.path.exists(cached_path):
+            os.remove(cached_path)
+            removed.append(cached_path)
+
+    return removed
+
+
 def _return_original(image_path):
     image_path = unquote(image_path)
 
-    if '..' in image_path:
-        raise ValueError('wrong filename')
+    if ".." in image_path:
+        raise ValueError("wrong filename")
 
     real_image_path = original_file_path(image_path)
 
@@ -89,13 +167,14 @@ def _return_original(image_path):
 
     return send_from_directory(folder, fname, as_attachment=False)
 
+
 def _return_resized(image_path, cache_prefix, size):
     """ return resized image from cache, or resize it and cache """
 
     image_path = unquote(image_path)
 
-    if '..' in image_path:
-        raise ValueError('wrong filename')
+    if ".." in image_path:
+        raise ValueError("wrong filename")
 
     real_image_path = original_file_path(image_path)
 
@@ -144,13 +223,13 @@ def _return_resized(image_path, cache_prefix, size):
     return send_from_directory(cached_folder, fname, as_attachment=False)
 
 
-def _return_movie(movie_path, movie_type='mp4'):
+def _return_movie(movie_path, movie_type="mp4"):
     """ return scaled / preprocessed movie from cache """
 
     movie_path = unquote(movie_path)
 
-    if '..' in movie_path:
-        raise ValueError('wrong filename')
+    if ".." in movie_path:
+        raise ValueError("wrong filename")
 
     real_movie_path = original_file_path(movie_path)
 
@@ -164,13 +243,13 @@ def _return_movie(movie_path, movie_type='mp4'):
         os.makedirs(cached_folder)
 
     orig_fname = os.path.basename(real_movie_path)
-    base_name= os.path.splitext(orig_fname)[0]    
-    fname = base_name + '.converted.' + movie_type
+    base_name = os.path.splitext(orig_fname)[0]
+    fname = base_name + ".converted." + movie_type
 
     cached_path = os.path.join(cached_folder, fname)
 
     if not os.path.exists(cached_path):
-        raise ValueError('movie not found')
+        raise ValueError("movie not found")
 
     return send_from_directory(cached_folder, fname, as_attachment=False)
 
@@ -196,11 +275,11 @@ class Media(Resource):
         path = request.args.get("path", "")
 
         parts = path.split("/")
-        ospath = os.sep.join(parts)        
+        ospath = os.sep.join(parts)
 
         argsize = request.args.get("size", "web")
 
-        if argsize == 'original':
+        if argsize == "original":
             return _return_original(ospath)
 
         if argsize not in resize_map.keys():
@@ -210,6 +289,23 @@ class Media(Resource):
         sizename = ".{}".format(argsize)
 
         return _return_resized(ospath, sizename, size)
+
+    @api.doc("Delete Image")
+    @requires_access_level(ACCESS["admin"])
+    @api.doc(params={"path": "Media path", "action": "Which action (delete)"})
+    def post(self, **kwargs):
+
+        params = request.get_json()
+        path = params.get("path", "")
+        action = params.get("action", "")
+
+        parts = path.split("/")
+        ospath = os.sep.join(parts)
+
+        if action == "delete":
+            return delete_image(ospath)
+
+        return
 
 
 @api.route("/movie/")
@@ -227,7 +323,7 @@ class Movie(Resource):
         path = request.args.get("path", "")
 
         parts = path.split("/")
-        ospath = os.sep.join(parts)        
+        ospath = os.sep.join(parts)
 
         movie_type = request.args.get("movie_type", "webm")
 
@@ -240,6 +336,23 @@ class Movie(Resource):
         #     response.headers["X-Accel-Redirect"] = app.config[
         #         "X_ACCEL_REDIRECT_PREFIX"
         #     ] + response.headers.pop("X-SendFile")
-        # return response        
+        # return response
 
         return _return_movie(ospath, movie_type)
+
+    @api.doc("Delete Movie")
+    @requires_access_level(ACCESS["admin"])
+    @api.doc(params={"path": "Media path", "action": "Which action (delete)"})
+    def post(self, **kwargs):
+
+        params = request.get_json()
+        path = params.get("path", "")
+        action = params.get("action", "")
+
+        parts = path.split("/")
+        ospath = os.sep.join(parts)
+
+        if action == "delete":
+            return delete_movie(ospath)
+
+        return

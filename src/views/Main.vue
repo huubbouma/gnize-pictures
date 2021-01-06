@@ -1,6 +1,6 @@
 <template>
   <div>
-    <FolderNavigator :path="fixedPath" />
+    <FolderNavigator :path="fixedPath" :itemId="itemId" />
   </div>
 </template>
 
@@ -16,17 +16,17 @@ export default {
       required: false,
       type: [Array, String],
     },
+    itemId: {
+      required: false,
+      type: String,
+    },
   },
+
   computed: {
     fixedPath() {
       return this.path || [];
     },
   },
-  watch: {
-    // $route(to, from) {
-    //   console.log(to);
-    //   console.log(from);
-    // },
-  },
+  watch: {},
 };
 </script>

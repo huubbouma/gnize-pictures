@@ -1,5 +1,5 @@
 <template>
-  <div v-if="item" class="lightbox" @click.self="closeLightbox()" tabindex="0">
+  <div v-if="item" ref="lightbox" class="lightbox" @click.self="closeLightbox()" tabindex="0">
     <img v-if="item.type === 'image'" :src="item.src" />
     <video ref="video" controls autoplay v-if="item.type === 'video'">
       <source
@@ -10,26 +10,34 @@
       />
       Your browser does not support the video tag.
     </video>
-
     <div class="arrow" id="left-arrow" v-on:click="previous">
       <i class="pi pi-arrow-circle-left" style="font-size: 3em"></i>
     </div>
     <div class="arrow" id="right-arrow" v-on:click="next">
       <i class="pi pi-arrow-circle-right" style="font-size: 3em"></i>
     </div>
+    <DeleteItem :item="item" :keyHandler="true" />
   </div>
 </template>
 
 <script>
+import DeleteItem from './DeleteItem.vue';
+
 export default {
   name: 'Overlay',
+  components: { DeleteItem },
+
   emits: ['close', 'previous', 'next'],
   props: {
     item: {
       required: true,
     },
   },
-
+  data() {
+    return {
+      startTouch: null,
+    };
+  },
   methods: {
     closeLightbox() {
       this.$emit('close');
@@ -53,19 +61,43 @@ export default {
         this.closeLightbox();
       }
     },
-    // handlePopstate() {
-    //   // console.log(`location: ${document.location}, state: ${JSON.stringify(event.state)}`);
-    //   // don't go back, but close modal
-    //   console.log("yo");
-    //   // event.preventDefault();
-    //   // event.stopImmediatePropagation()
-    //   window.history.go(1);
-    //   this.closeLightbox();
+    fixRoute() {
+      const { folderUri } = this.item;
+      const newPath = `/${folderUri}/!${encodeURIComponent(this.item.id)}`;
+      window.history.replaceState({}, null, newPath);
+    },
+    handleTouchStart(event) {
+      // note: don't mess with the 2 finger event to allow zooming in
+      if (event.touches.length === 1) {
+        // just one finger touched
+        this.startTouch = event.touches.item(0).clientX;
+      } else if (event.touches.length === 3) {
+        // 3 fingers hit the screen, abort the touch
+        this.startTouch = null;
+        this.$emit('close');
+      }
+    },
+    handleTouchEnd(event) {
+      const offset = 100; // at least 100px are a swipe
+      if (this.startTouch) {
+        // the only finger that hit the screen left it
+        const end = event.changedTouches.item(0).clientX;
+        console.log(end);
 
-    // },
+        if (end > this.startTouch + offset) {
+          // a left -> right swipe
+          this.$emit('previous');
+        }
+        if (end < this.startTouch - offset) {
+          // a right -> left swipe
+          this.$emit('next');
+        }
+      }
+    },
   },
   watch: {
     item() {
+      this.fixRoute();
       const { video } = this.$refs;
       if (video) {
         video.load();
@@ -75,17 +107,33 @@ export default {
   mounted() {
     document.addEventListener('keydown', this.handleKeydown);
     document.body.classList.add('modal-open');
-    // window.onpopstate = this.handlePopstate;
+    this.fixRoute();
+
+    const { lightbox } = this.$refs;
+    lightbox.addEventListener('touchstart', this.handleTouchStart);
+    lightbox.addEventListener('touchend', this.handleTouchEnd);
   },
   unmounted() {
     document.removeEventListener('keydown', this.handleKeydown);
+    const { lightbox } = this.$refs;
+    if (lightbox) {
+      lightbox.removeEventListener('touchstart', this.handleSwipe);
+      lightbox.removeEventListener('touchend', this.handleTouchEnd);
+    }
     document.body.classList.remove('modal-open');
-    // window.onpopstate = () => {}
   },
 };
 </script>
 
 <style lang="scss" scoped>
+
+.delete-item {
+  position: fixed;
+  z-index:1000;
+  top: 0;
+  right: 0;
+}
+
 *:focus {
   outline: none;
 }
@@ -101,6 +149,7 @@ video {
 
 .lightbox {
   user-select: none;
+  z-index:999;
   position: fixed;
   top: 0;
   left: 0;

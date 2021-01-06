@@ -1,49 +1,68 @@
 <template>
   <div>
-    <div v-if="isAuthenticated">
-      already logged in as {{ userId }}
-    </div>
-    <form novalidate class="md-layout" @submit.prevent="formSubmit">
-      <div class="md-layout-item">
-        <div>
-          <div class="md-title">Inloggen</div>
-        </div>
+    <Card v-if="isAuthenticated">
+      <template #title>Al ingelogd</template>
+      <template #content>
+        <div class="p-mb-2">Je bent al ingelogd als {{ userId }}</div>
+        <div><Button @click="logout" label="Log uit"></Button></div>
+      </template>
+    </Card>
 
-        <div>
-          <div :class="getValidationClass('email')">
-            <label for="email">Email</label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              autocomplete="email"
-              v-model="form.email"
-              :disabled="sending"
-            />
-            <span class="md-error" v-if="!$v.form.email.required">E-mail is vereist</span>
-            <span class="md-error" v-else-if="!$v.form.email.email">Onjuist e-mail formaat</span>
-          </div>
-          <div :class="getValidationClass('password')">
-            <label for="password">Wachtwoord</label>
-            <input
-              type="password"
-              name="password"
-              id="password"
-              autocomplete="password"
-              v-model="form.password"
-              :disabled="sending"
-            />
-            <span class="md-error" v-if="!$v.form.password.required">wachtwoord is vereist</span>
-          </div>
-        </div>
+    <Card v-if="!isAuthenticated">
+      <template #title>Login</template>
+      <template #subtitle> Je moet inloggen om de inhoud van deze website te kunnen zien </template>
+      <template #content>
+        <div class="p-fluid">
+          <form novalidate @submit.prevent="formSubmit">
+            <div class="p-formgroup-inline">
+              <div class="p-field">
+                <label for="email" class="p-sr-only">E mail</label>
+                <InputText
+                  id="email"
+                  placeholder="E mail"
+                  :disabled="sending"
+                  autocomplete="email"
+                  v-model="form.email"
+                  :class="{ 'p-invalid': isFieldValid('email') }"
+                />
+                <span class="p-error" v-if="$v.form.email.required.$invalid"
+                  >E-mail is vereist</span
+                >
+                <span class="p-error" v-else-if="$v.form.email.email.$invalid"
+                  >Onjuist e-mail formaat</span
+                >
+              </div>
 
-        <!-- <md-progress-bar md-mode="indeterminate" v-if="sending" /> -->
+              <div class="p-field">
+                <label for="password" class="p-sr-only">Wachtwoord</label>
+                <InputText
+                  id="password"
+                  placeholder="Wachtwoord"
+                  type="password"
+                  :disabled="sending"
+                  autocomplete="password"
+                  v-model="form.password"
+                  :class="{ 'p-invalid': isFieldValid('password') }"
+                />
+                <span class="p-error" v-if="$v.form.email.required.$invalid"
+                  >Wachtwoord is vereist</span
+                >
+              </div>
 
-        <div>
-          <button type="submit" class="md-primary" :disabled="sending">Login</button>
+              <ProgressSpinner v-if="sending" />
+
+              <Button
+                :disabled="sending"
+                type="submit"
+                label="Login"
+                icon="pi pi-angle-right"
+                iconPos="right"
+              />
+            </div>
+          </form>
         </div>
-      </div>
-    </form>
+      </template>
+    </Card>
   </div>
 </template>
 
@@ -82,34 +101,20 @@ export default {
 
   computed: {
     ...mapState(['user']),
-    ...mapGetters([
-      'userId',
-      'isAuthenticated',
-    ]),
-    loginDialog: {
-      get() {
-        return !this.isAuthenticated;
-      },
-      set(/* value */) {},
-    },
+    ...mapGetters(['userId', 'isAuthenticated']),
   },
   methods: {
-    getValidationClass(fieldName) {
-
+    logout() {
+      this.$store.dispatch('AUTH_LOGOUT');
+    },
+    isFieldValid(fieldName) {
       const field = this.$v.form[fieldName];
 
-      if (field.$invalid && field.$dirty || this.loginFailed === true) {
-        return {
-          'md-invalid': true
-        }
+      if ((field.$invalid && field.$dirty) || this.loginFailed === true) {
+        return false;
       }
 
-      return null;
-      // return field
-      //   ? {
-      //       'md-invalid': field.$invalid && field.$dirty,
-      //     }
-      //   : null;
+      return true;
     },
     clearForm() {
       this.$v.$reset();
@@ -137,7 +142,7 @@ export default {
         },
         () => {
           this.$toast.add({
-            severity: 'error',
+            severity: 'warn',
             summary: 'Login failed',
             detail: 'Cannot login with this email / password combination',
           });
