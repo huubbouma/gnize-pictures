@@ -103,6 +103,14 @@ def delete_image(image_path):
     os.remove(real_image_path)
     removed.append(real_image_path)
 
+    # also remove '.NEF' (hires) image
+    folder = os.path.dirname(real_image_path)
+    base_name = os.path.splitext(fname)[0]
+    nef_path = os.path.join(folder, base_name + '.NEF')
+    if os.path.exists(nef_path):
+        os.remove(nef_path)
+        removed.append(nef_path)
+
     # also remove the cached (resized) version
     cached_image_path = cached_file_path(image_path)
     cached_folder = os.path.dirname(cached_image_path)
