@@ -71,8 +71,9 @@ export default {
       this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
     closeOverlay() {
-      // this.$store.commit('setCurrentItem', null);
-      this.$router.go(-1);
+      const folderPath = `/${this.currentItem.folderUri}`;
+      this.$store.commit('setCurrentItem', null);
+      window.history.replaceState({}, null, folderPath);
     },
   },
   mounted() {

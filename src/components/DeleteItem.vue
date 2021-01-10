@@ -31,9 +31,6 @@ export default {
 
     deleteItem: {
       get() {
-        // console.log(this.item.path);
-        // console.log(this.getItemsToDelete);
-
         return this.item.path in this.getItemsToDelete;
       },
       set(value) {

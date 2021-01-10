@@ -82,7 +82,6 @@ export default {
       if (this.startTouch) {
         // the only finger that hit the screen left it
         const end = event.changedTouches.item(0).clientX;
-        console.log(end);
 
         if (end > this.startTouch + offset) {
           // a left -> right swipe

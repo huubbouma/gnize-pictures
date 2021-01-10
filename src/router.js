@@ -54,8 +54,8 @@ router.beforeEach((to, from, next) => {
   const { currentItem } = store.getters;
   if (currentItem && currentItem.folderPath) {
     const folderPath = `/${currentItem.folderUri}`;
-    window.history.pushState({}, null, folderPath);
     store.commit('setCurrentItem', null);
+    window.history.pushState({}, null, folderPath);
     next(false);
     return;
   }

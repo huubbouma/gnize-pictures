@@ -92,10 +92,21 @@ def get_media(path):
         if os.path.isdir(itempath):
             continue
 
+        base_name = os.path.splitext(item)[0]
+        nef_name = base_name + ".NEF"
+        nef_path = os.path.join(path, nef_name)
+
         for ext in imagetypes:
             if item.lower().endswith(ext):
+                nef_exists = os.path.exists(nef_path)
                 media.append(
-                    {"id": quote(item), "name": item, "type": "image", "ext": ext}
+                    {
+                        "id": quote(item),
+                        "name": item,
+                        "type": "image",
+                        "ext": ext,
+                        "nef": nef_exists and nef_name,
+                    }
                 )
 
         for ext in all_movietypes:
