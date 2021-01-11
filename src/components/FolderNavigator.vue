@@ -3,7 +3,7 @@
     <Breadcrumb :home="home" :model="breadcrumItems" />
 
     <ProgressSpinner v-if="loading" />
-
+    
     <div class="listing" v-if="listing">
       <ul>
         <li v-for="folder in listing.folders" :key="folder.id">

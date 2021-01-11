@@ -2,7 +2,7 @@
   <div class="wrapper">
     <ul class="gallery">
       <li class="gallery-panel" v-for="(item, index) in media" :key="item.path">
-        <img @click="showInOverlay(index)" :src="item.thumb" loading="lazy" />
+        <img :ref="item.id" @click="showInOverlay(index)" :src="item.thumb" loading="lazy" />
         <DeleteItem :item="item" :keyHandler="false" />
         <NefItem :item="item" :keyHandler="false" />
       </li>
@@ -14,6 +14,7 @@
       v-on:previous="showPrevious()"
       v-on:next="showNext()"
     />
+    <ScrollTop :threshold="400" v-if="!showOverlay"/>
   </div>
 </template>
 
@@ -52,7 +53,8 @@ export default {
   watch: {
     currentItem(newValue) {
       if (newValue) {
-        this.showOverlay = true;
+        this.showOverlay = true;        
+        this.$refs[newValue.id].scrollIntoView();
       } else {
         this.showOverlay = false;
       }

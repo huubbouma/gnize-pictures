@@ -3,7 +3,7 @@ module.exports = {
     host: 'mediaserver.local',
   },
   pwa: {
-    name: 'Gnize Pictures v2',
+    name: 'Gnize Pictures',
     themeColor: '#4DBA87',
     msTileColor: '#000000',
     appleMobileWebAppCapable: 'yes',

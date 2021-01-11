@@ -10,6 +10,8 @@ import ProgressSpinner from 'primevue/progressspinner';
 import Chip from 'primevue/components/chip/chip.common';
 import Card from 'primevue/card';
 import ToggleButton from 'primevue/togglebutton';
+import ScrollTop from 'primevue/components/scrolltop/scrolltop.common';
+import Sidebar from 'primevue/sidebar';
 
 import Toast from 'primevue/toast';
 import ToastService from 'primevue/toastservice';
@@ -27,7 +29,7 @@ import 'primevue/resources/primevue.min.css'; // core css
 import 'primeicons/primeicons.css'; // icons
 
 import 'primeflex/primeflex.css';
-import './registerServiceWorker'
+import './registerServiceWorker';
 
 const app = createApp(App);
 
@@ -47,6 +49,8 @@ app.component('ProgressSpinner', ProgressSpinner);
 app.component('Chip', Chip);
 app.component('Card', Card);
 app.component('ToggleButton', ToggleButton);
+app.component('ScrollTop', ScrollTop);
+app.component('Sidebar', Sidebar);
 
 app.mount('#app');
 
