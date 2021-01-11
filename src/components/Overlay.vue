@@ -17,15 +17,17 @@
       <i class="pi pi-arrow-circle-right" style="font-size: 3em"></i>
     </div>
     <DeleteItem :item="item" :keyHandler="true" />
+    <NefItem :item="item" :keyHandler="true" />
   </div>
 </template>
 
 <script>
 import DeleteItem from './DeleteItem.vue';
+import NefItem from './NefItem.vue';
 
 export default {
   name: 'Overlay',
-  components: { DeleteItem },
+  components: { DeleteItem, NefItem },
 
   emits: ['close', 'previous', 'next'],
   props: {
@@ -64,7 +66,9 @@ export default {
     fixRoute() {
       const { folderUri } = this.item;
       const newPath = `/${folderUri}/!${encodeURIComponent(this.item.id)}`;
-      window.history.replaceState({}, null, newPath);
+      // window.history.pushState({}, null, newPath);
+      window.history.pushState(window.history.state, '', newPath);
+      // this.$route.next({path: newPath, replace: true});
     },
     handleTouchStart(event) {
       // note: don't mess with the 2 finger event to allow zooming in
@@ -125,11 +129,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .delete-item {
   position: fixed;
-  z-index:1000;
+  z-index: 1000;
   top: 0;
+  right: 0;
+}
+
+.nef-item {
+  position: fixed;
+  z-index: 1000;  
+  top: 3em;
   right: 0;
 }
 
@@ -148,7 +158,7 @@ video {
 
 .lightbox {
   user-select: none;
-  z-index:999;
+  z-index: 999;
   position: fixed;
   top: 0;
   left: 0;

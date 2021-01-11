@@ -13,6 +13,7 @@ const store = createStore({
     currentItem: null,
     showFileOperations: false,
     itemsToDelete: {}, // should be a Set() ?
+    nefItemsToDelete: {}, // should be a Set() ?
   },
 
   mutations: {
@@ -69,7 +70,20 @@ const store = createStore({
     },
     clearItemsToDelete(state) {
       state.itemsToDelete = {};
+    },
+
+    addNefItemToDelete(state, item) {
+      const key = item.path;
+      state.nefItemsToDelete[key] = item;
+    },
+    removeNefItemToDelete(state, item) {
+      const key = item.path;
+      delete state.nefItemsToDelete[key];
+    },
+    clearNefItemsToDelete(state) {
+      state.nefItemsToDelete = {};
     }
+
   },
 
   actions: {
@@ -222,6 +236,9 @@ const store = createStore({
     getItemsToDelete(state) {
       return state.itemsToDelete;
     },
+    getNefItemsToDelete(state) {
+      return state.nefItemsToDelete;
+    }
   },
 });
 
@@ -233,6 +250,7 @@ store.subscribe((mutation, state) => {
     status: state.status,
     showFileOperations: state.showFileOperations,
     itemsToDelete: state.itemsToDelete,
+    nefItemsToDelete: state.nefItemsToDelete,
   };
 
   localStorage.setItem('store', JSON.stringify(itemsToStore));

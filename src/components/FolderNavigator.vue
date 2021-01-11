@@ -4,7 +4,6 @@
 
     <ProgressSpinner v-if="loading" />
 
-
     <div class="listing" v-if="listing">
       <ul>
         <li v-for="folder in listing.folders" :key="folder.id">
@@ -91,7 +90,6 @@ export default {
               summary: 'Error loading listing',
               detail: err.message,
             });
-
           },
         );
     },
@@ -166,6 +164,7 @@ export default {
                 folderUri: folderPath,
                 path: `${folderPath}/${encodeURIComponent(item.id)}`,
                 type: 'image',
+                nef: item.nef,
                 src: `${
                   process.env.VUE_APP_MEDIASERVER_URL
                 }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=web`,
@@ -182,6 +181,8 @@ export default {
     },
   },
   created() {
+    // window.history.pushState({}, null, "/");
+
     if (this.itemId) {
       const decodedItemId = decodeURIComponent(this.itemId);
       this.getListing().then(() => {
@@ -196,6 +197,17 @@ export default {
   },
   mounted() {
     this.getListing();
+
+    // const cleanPath = this.path.map((item) => {
+    //   const decodedItem = decodeURIComponent(decodeURIComponent(item));
+    //   return encodeURIComponent(decodedItem);
+    // });
+
+    // if (this.itemId) {
+    //   const folderPath = `/${cleanPath.join('/')}`;
+    //   window.history.pushState({}, null, folderPath);
+    //   console.log(window.history);
+    // }
   },
   watch: {
     // currentItem(newValue) {

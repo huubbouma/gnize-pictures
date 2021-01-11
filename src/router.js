@@ -4,6 +4,12 @@ import Admin from '@/views/Admin.vue';
 import store from './store';
 import Login from './views/Login.vue';
 
+// https://stackoverflow.com/a/52721706
+window.popStateDetected = false;
+window.addEventListener('popstate', () => {
+  window.popStateDetected = true;
+});
+
 const routes = [
   {
     path: '/:path*/!:itemId?',
@@ -50,13 +56,40 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  const IsItABackButton = window.popStateDetected;
+  window.popStateDetected = false;
+
   // check if we're in a overlay. If we are, just close it
   const { currentItem } = store.getters;
-  if (currentItem && currentItem.folderPath) {
-    const folderPath = `/${currentItem.folderUri}`;
+  if (IsItABackButton && currentItem && currentItem.folderPath) {
+    // const folderPath = `/${currentItem.folderUri}`;
     store.commit('setCurrentItem', null);
-    window.history.pushState({}, null, folderPath);
-    next(false);
+    // console.log(folderPath);
+    // window.history.pushState({}, null, folderPath);
+    // next(false);
+    // return;
+  }
+
+  if (IsItABackButton) {
+    // console.log(to.fullPath);
+
+    if (currentItem && currentItem.folderPath) {
+      // console.log(`back to folder: ${currentItem.folderUri}`);
+      next({ path: `/${currentItem.folderUri}`, replace: true });
+      window.history.replaceState(window.history.state, '', `/${currentItem.folderUri}`);
+      return;
+    }
+
+    // traverse up the path
+    let newPath = `${from.fullPath
+      .split('/')
+      .slice(0, -1)
+      .join('/')}`;
+    if (newPath === '') {
+      newPath = '/';
+    }
+    // console.log(newPath);
+    next({ path: newPath, replace: true });
     return;
   }
 

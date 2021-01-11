@@ -2,8 +2,9 @@
   <div class="wrapper">
     <ul class="gallery">
       <li class="gallery-panel" v-for="(item, index) in media" :key="item.path">
-        <img @click="showInOverlay(index)" :src="item.thumb" />
-        <DeleteItem :item="item" :keyHandler="false"/>
+        <img @click="showInOverlay(index)" :src="item.thumb" loading="lazy" />
+        <DeleteItem :item="item" :keyHandler="false" />
+        <NefItem :item="item" :keyHandler="false" />
       </li>
     </ul>
     <Overlay
@@ -20,11 +21,12 @@
 import { mapGetters } from 'vuex';
 import Overlay from './Overlay.vue';
 import DeleteItem from './DeleteItem.vue';
+import NefItem from './NefItem.vue';
 
 export default {
   name: 'Gallery',
 
-  components: { Overlay, DeleteItem },
+  components: { Overlay, DeleteItem, NefItem },
 
   props: {
     media: {
@@ -71,9 +73,11 @@ export default {
       this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
     closeOverlay() {
-      const folderPath = `/${this.currentItem.folderUri}`;
-      this.$store.commit('setCurrentItem', null);
-      window.history.replaceState({}, null, folderPath);
+      // const folderPath = `/${this.currentItem.folderUri}`;
+      // console.log(folderPath);
+      // window.history.replaceState({}, null, folderPath);
+      // this.$store.commit('setCurrentItem', null);
+      this.$router.go(-1);
     },
   },
   mounted() {
@@ -83,7 +87,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .gallery-panel {
   position: relative;
 }
@@ -91,6 +94,12 @@ export default {
 .delete-item {
   position: absolute;
   top: 0;
+  right: 0;
+}
+
+.nef-item {
+  position: absolute;
+  top: 3em;
   right: 0;
 }
 
