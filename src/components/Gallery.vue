@@ -1,10 +1,18 @@
 <template>
   <div class="wrapper">
     <ul class="gallery">
-      <li class="gallery-panel" v-for="(item, index) in media" :key="item.path">
-        <img :ref="item.id" @click="showInOverlay(index)" :src="item.thumb" loading="lazy" />
-        <DeleteItem :item="item" :keyHandler="false" />
-        <NefItem :item="item" :keyHandler="false" />
+      <li
+        :ref="item.id"
+        class="gallery-panel"
+        v-for="(item, index) in media"
+        :key="item.path"
+      >
+        <template v-if="!itemId">
+          <img @click="showInOverlay(index)" :src="item.thumb" loading="lazy" />
+          <i v-if="item.type === 'video' && item.hasThumb" class="indicator pi pi-chevron-circle-right"></i>
+          <DeleteItem :item="item" :keyHandler="false" />
+          <NefItem :item="item" :keyHandler="false" />
+        </template>
       </li>
     </ul>
     <Overlay
@@ -14,12 +22,13 @@
       v-on:previous="showPrevious()"
       v-on:next="showNext()"
     />
-    <ScrollTop :threshold="400" v-if="!showOverlay"/>
+    <ScrollTop :threshold="400" v-if="!showOverlay" />
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
+// import { nextTick } from 'vue';
 import Overlay from './Overlay.vue';
 import DeleteItem from './DeleteItem.vue';
 import NefItem from './NefItem.vue';
@@ -45,6 +54,7 @@ export default {
       showVideos: true,
       showOverlay: false,
       currentIndex: 0,
+      lastItemSelected: null,
     };
   },
   computed: {
@@ -53,10 +63,19 @@ export default {
   watch: {
     currentItem(newValue) {
       if (newValue) {
-        this.showOverlay = true;        
-        this.$refs[newValue.id].scrollIntoView();
+        this.showOverlay = true;
+        this.lastItemSelected = newValue;
       } else {
         this.showOverlay = false;
+        if (this.lastItemSelected) {
+          const ref = this.$refs[this.lastItemSelected.id];
+          if (ref) {
+            // await nextTick();
+            window.setTimeout(() => {
+              ref.scrollIntoView();
+            }, 1);
+          }
+        }
       }
     },
   },
@@ -119,9 +138,25 @@ ul {
 
 li {
   user-select: none;
-  height: 30vh;
+  height: 40vh;
   flex-grow: 0;
   // flex-grow: 1;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  .indicator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate( -50%, -50% );
+    padding: 3px 15px 3px 25px;
+    color: white;
+    font-size: 2rem;  
+    border-radius: 5px 5px 5px 5px;
+  }
+  
 }
 
 img {

@@ -325,7 +325,7 @@ class Movie(Resource):
     @api.doc("Get Movie")
     # @api.expect(folder_query, validate=False)
     @requires_access_level(ACCESS["user"])
-    @api.doc(params={"path": "Media path", "movie_type": "Movie Type"})
+    @api.doc(params={"path": "Media path", "movie_type": "Movie Type", "thumb": "Get thumbnail"})
     def get(self, **kwargs):
 
         path = request.args.get("path", "")
@@ -334,6 +334,8 @@ class Movie(Resource):
         ospath = os.sep.join(parts)
 
         movie_type = request.args.get("movie_type", "webm")
+
+        thumb = request.args.get("thumb", False)
 
         # # In case of NGINX we need to use X_ACCEL_REDIRECT, so we rewrite the
         # # X-Sendfile headers to X-Accel-Redirect. Since NGINX will return a 404
@@ -345,6 +347,14 @@ class Movie(Resource):
         #         "X_ACCEL_REDIRECT_PREFIX"
         #     ] + response.headers.pop("X-SendFile")
         # return response
+
+        if thumb:
+           
+            image_path = unquote(ospath)
+            cached_image_path = cached_file_path(image_path)
+            cached_folder = os.path.dirname(cached_image_path)
+            fname = os.path.basename(cached_image_path)            
+            return send_from_directory(cached_folder, fname, as_attachment=False)
 
         return _return_movie(ospath, movie_type)
 

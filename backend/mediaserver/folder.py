@@ -63,6 +63,18 @@ def folder_path(path):
     return folderpath
 
 
+def cached_folder_path(path):
+    if ".." in path:
+        raise ValueError("parent selector not supported")
+
+    if path.startswith("/"):
+        path = path[1:]
+
+    root_path = current_app.config["MEDIASERVER_CACHED_PATH"]
+    folderpath = os.path.join(root_path, path)
+    return folderpath
+
+
 def get_subfolders(path):
     """ return subfolders in path """
 
@@ -82,8 +94,9 @@ def get_subfolders(path):
 def get_media(path):
     """ return media in path """
 
-    path = unquote(path)
-    path = folder_path(path)
+    unquoted_path = unquote(path)
+    path = folder_path(unquoted_path)
+    cached_path = cached_folder_path(unquoted_path)
     items = os.listdir(path)
     items.sort()
     media = []
@@ -95,6 +108,9 @@ def get_media(path):
         base_name = os.path.splitext(item)[0]
         nef_name = base_name + ".NEF"
         nef_path = os.path.join(path, nef_name)
+        
+        thumb_name = ".thumbnail." + base_name + ".jpg"
+        thumb_path = os.path.join(cached_path, thumb_name)
 
         for ext in imagetypes:
             if item.lower().endswith(ext):
@@ -111,6 +127,7 @@ def get_media(path):
 
         for ext in all_movietypes:
             if item.lower().endswith(ext):
+                thumb_exists = os.path.exists(thumb_path)                
                 for html5_ext in supported_html5_movietypes:
                     media.append(
                         {
@@ -118,6 +135,7 @@ def get_media(path):
                             "name": item,
                             "type": "movie",
                             "ext": html5_ext,
+                            "thumb": thumb_exists and thumb_name,
                         }
                     )
 

@@ -3,7 +3,7 @@
     <Breadcrumb :home="home" :model="breadcrumItems" />
 
     <ProgressSpinner v-if="loading" />
-    
+
     <div class="listing" v-if="listing">
       <ul>
         <li v-for="folder in listing.folders" :key="folder.id">
@@ -150,7 +150,12 @@ export default {
                     type: `video/${item.ext}`,
                   },
                 ],
-                thumb: videoIcon,
+                hasThumb: item.thumb,
+                thumb: item.thumb
+                  ? `${
+                      process.env.VUE_APP_MEDIASERVER_URL
+                    }/media/movie/?path=${folderPath}/${encodeURIComponent(item.thumb)}&thumb=true`
+                  : videoIcon,
                 caption: item.name,
                 width: 800, // Required
                 height: 600, // Required
