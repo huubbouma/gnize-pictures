@@ -52,6 +52,16 @@ app.component('ToggleButton', ToggleButton);
 app.component('ScrollTop', ScrollTop);
 app.component('Sidebar', Sidebar);
 
+// directive to set loaded flag when image is loaded from cache (complete)
+app.directive('loaded-if-complete', {
+  beforeUpdate(el, binding) {
+    if (el.complete) {
+      // eslint-disable-next-line no-param-reassign
+      binding.value = true;
+    }
+  },
+});
+
 app.mount('#app');
 
 store.dispatch('initialiseStore');

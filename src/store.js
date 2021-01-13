@@ -12,6 +12,8 @@ const store = createStore({
     storeLoaded: false,
     currentItem: null,
     showFileOperations: false,
+    showVideos: true,
+    showPictures: true,
     itemsToDelete: {}, // should be a Set() ?
     nefItemsToDelete: {}, // should be a Set() ?
   },
@@ -82,8 +84,13 @@ const store = createStore({
     },
     clearNefItemsToDelete(state) {
       state.nefItemsToDelete = {};
-    }
-
+    },
+    setShowVideos(state, payload) {
+      state.showVideos = payload;
+    },
+    setShowPictures(state, payload) {
+      state.showPictures = payload;
+    },
   },
 
   actions: {
@@ -172,9 +179,11 @@ const store = createStore({
         const todo = Object.values(getters.getItemsToDelete);
         const all = [];
         todo.forEach(item => {
-          all.push(throttledDelete(item).then(() => {
-            commit('removeItemToDelete', item);
-          }));
+          all.push(
+            throttledDelete(item).then(() => {
+              commit('removeItemToDelete', item);
+            }),
+          );
         });
         Promise.all(all)
           .then(() => {
@@ -238,7 +247,13 @@ const store = createStore({
     },
     getNefItemsToDelete(state) {
       return state.nefItemsToDelete;
-    }
+    },
+    getShowVideos(state) {
+      return state.showVideos;
+    },
+    getShowPictures(state) {
+      return state.showPictures;
+    },
   },
 });
 
@@ -249,6 +264,8 @@ store.subscribe((mutation, state) => {
     token: state.token,
     status: state.status,
     showFileOperations: state.showFileOperations,
+    showVideos: state.showVideos,
+    showPictures: state.showPictures,
     itemsToDelete: state.itemsToDelete,
     nefItemsToDelete: state.nefItemsToDelete,
   };

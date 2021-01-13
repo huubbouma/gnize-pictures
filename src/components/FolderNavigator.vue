@@ -52,8 +52,8 @@ export default {
     return {
       home: { icon: 'pi pi-home', to: '/' },
       listing: {},
-      showPictures: true,
-      showVideos: true,
+      // showPictures: true,
+      // showVideos: true,
       loading: true,
       error: false,
     };
@@ -95,7 +95,30 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['currentItem']),
+    ...mapGetters(['currentItem', 'getShowPictures', 'getShowVideos']),
+
+    showVideos: {
+      get() {
+        return this.getShowVideos;
+      },
+      set(value) {
+        this.$store.commit('setShowVideos', value);
+        if (!value && !this.getShowPictures) {
+          this.showPictures = true;
+        }
+      },
+    },
+    showPictures: {
+      get() {
+        return this.getShowPictures;
+      },
+      set(value) {
+        this.$store.commit('setShowPictures', value);
+        if (!value && !this.getShowVideos) {
+          this.showVideos = true;
+        }
+      },
+    },
     breadcrumItems() {
       const hist = [];
       const items = this.path.map((item) => {

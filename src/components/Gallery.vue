@@ -1,17 +1,25 @@
 <template>
   <div class="wrapper">
     <ul class="gallery">
-      <li
-        :ref="item.id"
-        class="gallery-panel"
-        v-for="(item, index) in media"
-        :key="item.path"
-      >
+      <li :ref="item.id" class="gallery-panel" v-for="(item, index) in media" :key="item.path">
         <template v-if="!itemId">
-          <img @click="showInOverlay(index)" :src="item.thumb" loading="lazy" />
-          <i v-if="item.type === 'video' && item.hasThumb" class="indicator pi pi-chevron-circle-right"></i>
-          <DeleteItem :item="item" :keyHandler="false" />
-          <NefItem :item="item" :keyHandler="false" />
+          <transition name="fade" appear>
+            <div class="image-wrapper" v-show="loadedImages[item.id]">
+              <img
+                @click="showInOverlay(index)"
+                :src="item.thumb"
+                v-loaded-if-complete="loadedImages[item.id]"
+                @load="loadedImages[item.id] = true"
+              />
+              <i
+                @click="showInOverlay(index)"
+                v-if="item.type === 'video' && item.hasThumb"
+                class="indicator pi pi-chevron-circle-right"
+              ></i>
+              <DeleteItem :item="item" :keyHandler="false" />
+              <NefItem :item="item" :keyHandler="false" />
+            </div>
+          </transition>
         </template>
       </li>
     </ul>
@@ -28,7 +36,6 @@
 
 <script>
 import { mapGetters } from 'vuex';
-// import { nextTick } from 'vue';
 import Overlay from './Overlay.vue';
 import DeleteItem from './DeleteItem.vue';
 import NefItem from './NefItem.vue';
@@ -50,17 +57,23 @@ export default {
   },
   data() {
     return {
-      showPictures: true,
-      showVideos: true,
       showOverlay: false,
       currentIndex: 0,
       lastItemSelected: null,
+      loadedImages: {},
     };
   },
   computed: {
     ...mapGetters(['currentItem', 'getItemsToDelete']),
   },
   watch: {
+    media(newValue) {
+      newValue.forEach((element) => {
+        if (element.type === 'image') {
+          this.loadedImages[element.id] = false;
+        }
+      });
+    },
     currentItem(newValue) {
       if (newValue) {
         this.showOverlay = true;
@@ -80,6 +93,10 @@ export default {
     },
   },
   methods: {
+    loadImage(item) {
+      console.log('loaded: loadImage');
+      this.loadedImages[item.id] = true;
+    },
     showPrevious() {
       this.currentIndex = this.currentIndex === 0 ? this.media.length - 1 : this.currentIndex - 1;
       this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
@@ -108,6 +125,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.image-wrapper {
+  transition-duration: 0.5s;
+}
+
 .gallery-panel {
   position: relative;
 }
@@ -150,13 +171,12 @@ li {
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate( -50%, -50% );
-    padding: 3px 15px 3px 25px;
+    transform: translate(-50%, -50%);
+    // padding: 3px 15px 3px 25px;
     color: white;
-    font-size: 2rem;  
-    border-radius: 5px 5px 5px 5px;
+    font-size: 3rem;
+    // border-radius: 5px 5px 5px 5px;
   }
-  
 }
 
 img {
