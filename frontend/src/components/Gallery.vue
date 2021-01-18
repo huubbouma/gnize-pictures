@@ -172,10 +172,8 @@ li {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    // padding: 3px 15px 3px 25px;
     color: white;
-    font-size: 3rem;
-    // border-radius: 5px 5px 5px 5px;
+    font-size: 3rem;    
   }
 }
 

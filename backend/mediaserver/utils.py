@@ -70,11 +70,13 @@ def requires_access_level(access_level):
                 kwargs["user"] = User(email='bobdobalina@localhost', password='-', access=0)
                 return f(*args, **kwargs)
 
-            try:
+            try:                
                 token = request.headers.get("Authorization", "")
                 if not token:
                     # try reading from cookie
                     token = request.cookies.get('Authorization')
+                if not token:
+                    token = request.args.get('token')
 
                 data = jwt.decode(
                     token, current_app.config["SECRET_KEY"], algorithms=["HS256"]

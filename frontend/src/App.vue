@@ -1,6 +1,7 @@
 <template>
   <div id="gnize-pictures">
     <Toast />
+    <div ref="cast-button"></div>
     <router-view />
   </div>
 </template>
@@ -20,7 +21,23 @@ export default {
   computed: {
     ...mapGetters(['isLoggedIn']),
   },
+
+  mounted() {
+    const castScript = document.createElement('script');
+    castScript.setAttribute(
+      'src',
+      'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1',
+    );
+    document.head.appendChild(castScript);
+  },
+
   created() {
+    window.__onGCastApiAvailable = (isAvailable) => {
+      if (isAvailable) {
+        this.initializeCastApi();
+      }
+    };
+
     this.$http.interceptors.response.use(
       undefined,
       (err) =>
@@ -39,6 +56,15 @@ export default {
     );
   },
   methods: {
+    initializeCastApi() {
+      const ctx = window.cast.framework.CastContext.getInstance().setOptions({
+        receiverApplicationId: process.env.VUE_APP_CAST_APP_ID,
+        autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+      });
+      const btn = document.createElement('google-cast-launcher');
+      this.$refs['cast-button'].appendChild(btn);
+      console.log(ctx);
+    },
     greet() {
       this.$toast.add({
         severity: 'info',
