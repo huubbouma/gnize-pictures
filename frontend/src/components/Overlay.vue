@@ -22,6 +22,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
 import DeleteItem from './DeleteItem.vue';
 import NefItem from './NefItem.vue';
 
@@ -39,6 +40,9 @@ export default {
     return {
       startTouch: null,
     };
+  },
+  computed: {
+    ...mapGetters(['getToken']),
   },
   methods: {
     closeLightbox() {
@@ -97,6 +101,47 @@ export default {
         }
       }
     },
+    castItem() {
+      const castContext = window.cast.framework.CastContext.getInstance();
+      if (castContext && castContext.getCastState() === 'CONNECTED') {
+
+        const castSession = castContext.getCurrentSession();
+
+        let mediaUrl = this.item.src;
+        let mediaType = 'image/jpeg';
+
+        if (this.item.type === 'video') {
+          const { sources } = this.item;
+          const [contentItem] = sources;
+          mediaUrl = contentItem.src;
+          // mediaType = 'video/mp4';
+          // mediaType = 'video/mp4; codecs="avc1.42E01E, mp4a.40.5"'
+          mediaType = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+        }
+
+        console.log(`src: ${mediaUrl}`);
+        console.log(`type: ${mediaType}`);
+
+        // chromecast can't handle authentication header for single media items.. whaat?!
+        // but our backend can handle a token in the URL as a get parameter so add it here
+        mediaUrl = `${mediaUrl}&token=${this.getToken}`;      
+
+        const mediaInfo = new window.chrome.cast.media.MediaInfo(mediaUrl, mediaType);
+        const request = new window.chrome.cast.media.LoadRequest(mediaInfo);
+
+        // hack token on the URL. chromecast receiver doesn't support adding header for single
+        // media items like images or movie files
+        // see: https://issuetracker.google.com/u/1/issues/112627081
+        castSession.loadMedia(request).then(
+          () => {
+            console.log('Load succeed');
+          },
+          (errorCode) => {
+            console.log(`Error code: ${errorCode}`);
+          },
+        );
+      }
+    },
   },
   watch: {
     item() {
@@ -105,40 +150,14 @@ export default {
       if (video) {
         video.load();
       }
-
-      let mediaUrl = this.item.src;
-      let mediaType = 'image/jpeg';
-
-      if (this.item.type === 'video') {
-        const { sources } = this.item;
-        const [contentItem] = sources;
-        mediaUrl = contentItem.src;
-        mediaType = 'video/mp4';
-      }
-
-      console.log(`src: ${mediaUrl}`);
-      console.log(`type: ${mediaType}`);
-
-      const castSession = window.cast.framework.CastContext.getInstance().getCurrentSession();
-      const mediaInfo = new window.chrome.cast.media.MediaInfo(mediaUrl, mediaType);
-      const request = new window.chrome.cast.media.LoadRequest(mediaInfo, {
-        credentials: 'LALALALA',
-      });
-      request.credentials = "MOIIIEEEE";
-      castSession.loadMedia(request).then(
-        () => {
-          console.log('Load succeed');
-        },
-        (errorCode) => {
-          console.log(`Error code: ${errorCode}`);
-        },
-      );
+      this.castItem();
     },
   },
   mounted() {
     document.addEventListener('keydown', this.handleKeydown);
     document.body.classList.add('modal-open');
     this.fixRoute();
+    this.castItem();
 
     const { lightbox } = this.$refs;
     lightbox.addEventListener('touchstart', this.handleTouchStart);

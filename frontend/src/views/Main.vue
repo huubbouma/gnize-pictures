@@ -16,6 +16,10 @@
       </Card>
     </Sidebar>
 
+    <div class="cast-button-wrapper">
+      <div ref="castButton"></div>
+    </div>
+
     <Button
       icon="pi pi-cog"
       class="p-button-rounded p-button-info p-button-text settings-button"
@@ -46,6 +50,10 @@ export default {
     return {
       sideBarVisible: false,
     };
+  },
+  mounted() {
+    const btn = document.createElement('google-cast-launcher');
+    this.$refs.castButton.appendChild(btn);
   },
   methods: {
     go(to) {
@@ -81,5 +89,11 @@ export default {
   position: absolute;
   right: 0.5em;
   top: 0.5em;
+}
+.cast-button-wrapper {
+  width: 1.3em;
+  position: absolute;
+  right: 2.5em;
+  top: 1em;
 }
 </style>

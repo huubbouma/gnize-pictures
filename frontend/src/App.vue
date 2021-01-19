@@ -1,7 +1,6 @@
 <template>
   <div id="gnize-pictures">
     <Toast />
-    <div ref="cast-button"></div>
     <router-view />
   </div>
 </template>
@@ -57,13 +56,11 @@ export default {
   },
   methods: {
     initializeCastApi() {
-      const ctx = window.cast.framework.CastContext.getInstance().setOptions({
-        receiverApplicationId: process.env.VUE_APP_CAST_APP_ID,
+      window.cast.framework.CastContext.getInstance().setOptions({
+        // receiverApplicationId: process.env.VUE_APP_CAST_APP_ID,
+        receiverApplicationId: window.chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
         autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
       });
-      const btn = document.createElement('google-cast-launcher');
-      this.$refs['cast-button'].appendChild(btn);
-      console.log(ctx);
     },
     greet() {
       this.$toast.add({

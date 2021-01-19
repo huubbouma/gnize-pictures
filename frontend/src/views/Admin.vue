@@ -78,7 +78,7 @@ export default {
   watch: {},
   methods: {
     hasItemsToDelete() {
-      return Object.keys(this.getItemsToDelete).length > 0;      
+      return Object.keys(this.getItemsToDelete).length > 0;
     },
     hasNefItemsToDelete() {
       return Object.keys(this.getNefItemsToDelete).length > 0;

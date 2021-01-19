@@ -2,6 +2,24 @@ module.exports = {
   devServer: {
     host: 'mediaserver.local',
   },
+
+//  chainWebpack: config => {
+//    config.module
+//      .rule('vue')
+//      .use('vue-loader')
+//      .loader('vue-loader')
+//      .tap(options => {
+//        // eslint-disable-next-line no-param-reassign
+//        options.compilerOptions = {
+//          ...(options.compilerOptions || {}),
+//          // isCustomElement: tag => /^x-/.test(tag)
+//          isCustomElement: tag => tag === 'google-cast-launcher',
+//        };
+//        return options;
+//      });
+//  },
+
+
   pwa: {
     name: 'Gnize Pictures',
     themeColor: '#4DBA87',

@@ -202,6 +202,9 @@ const store = createStore({
     isLoggedIn(state) {
       return !!state.user;
     },
+    getToken(state) {
+      return state.token;
+    },
 
     isAdmin: state => state.user && state.user.access === 'admin',
     authStatus: state => state.status,
