@@ -91,6 +91,145 @@ def get_subfolders(path):
     return folders
 
 
+def create_folder(path):
+    unquoted_path = unquote(path)
+    path = folder_path(unquoted_path)
+    result = True
+    error = None
+    try:
+        os.mkdir(path)
+    except FileExistsError as e:
+        result = False
+        error = str(e)
+
+    return {
+        "result": result,
+        "error": error,
+    }
+
+
+def rename_folder(oldpath, newpath):
+    unquoted_oldpath = unquote(oldpath)
+    unquoted_newpath = unquote(newpath)
+    oldpath = folder_path(unquoted_oldpath)
+    newpath = folder_path(unquoted_newpath)
+
+    cached_oldpath = cached_folder_path(unquoted_oldpath)
+    cached_newpath = cached_folder_path(unquoted_newpath)
+
+    result = True
+    error = None
+
+    if not os.path.isdir(oldpath):
+        result = False
+        error = "Path is not a folder"
+
+    if result:
+        try:
+            os.rename(oldpath, newpath)
+        except (FileNotFoundError, OSError) as e:
+            result = False
+            error = str(e)
+
+    # also the cached paths.. ignore all errors
+    if result:
+        try:
+            os.rename(cached_oldpath, cached_newpath)
+        except (FileNotFoundError, OSError) as e:
+            pass
+
+    return {
+        "result": result,
+        "error": error,
+    }
+
+
+def move_item(oldpath, newpath):
+    unquoted_oldpath = unquote(oldpath)
+    unquoted_newpath = unquote(newpath)
+    oldpath = folder_path(unquoted_oldpath)
+    newpath = folder_path(unquoted_newpath)
+
+    cached_oldpath = cached_folder_path(unquoted_oldpath)
+    cached_newpath = cached_folder_path(unquoted_newpath)
+
+    result = True
+    error = None
+
+    if not os.path.isfile(oldpath):
+        result = False
+        error = "Path is not a file"
+
+    if result:
+        try:
+            os.rename(oldpath, newpath)
+        except (FileNotFoundError, OSError) as e:
+            result = False
+            error = str(e)
+
+    # also the cached paths.. ignore all errors
+    if result:
+
+        fname = os.path.basename(oldpath)
+        base_name = os.path.splitext(fname)[0]
+
+        nef_name = base_name + ".NEF"
+
+        old_nef_path = os.path.join(cached_oldpath, nef_name)
+        new_nef_path = os.path.join(cached_newpath, nef_name)
+
+        try:
+            os.rename(old_nef_path, new_nef_path)
+        except:
+            pass
+
+        thumb_name = ".thumbnail." + base_name + ".jpg"
+        old_thumb_path = os.path.join(cached_oldpath, thumb_name)
+        new_thumb_path = os.path.join(cached_newpath, thumb_name)
+        try:
+            os.rename(old_nef_path, new_nef_path)
+        except:
+            pass
+
+        return {
+            "result": result,
+            "error": error,
+        }
+
+
+def delete_empty_folder(path):
+    unquoted_path = unquote(path)
+    path = folder_path(unquoted_path)
+    cached_path = cached_folder_path(unquoted_path)
+
+    result = True
+    error = None
+
+    items = os.listdir(path)
+    if not items:
+        result = False
+        error = "Folder is not empty"
+    else:
+
+        try:
+            os.rmdir(path)
+        except (FileNotFoundError, OSError) as e:
+            result = False
+            error = str(e)
+
+        if result:
+            # also the cached paths.. ignore all errors
+            try:
+                os.rmdir(cached_path)
+            except (FileNotFoundError, OSError) as e:
+                pass
+
+    return {
+        "result": result,
+        "error": error,
+    }
+
+
 def get_media(path):
     """ return media in path """
 
@@ -108,7 +247,7 @@ def get_media(path):
         base_name = os.path.splitext(item)[0]
         nef_name = base_name + ".NEF"
         nef_path = os.path.join(path, nef_name)
-        
+
         thumb_name = ".thumbnail." + base_name + ".jpg"
         thumb_path = os.path.join(cached_path, thumb_name)
 
@@ -127,7 +266,7 @@ def get_media(path):
 
         for ext in all_movietypes:
             if item.lower().endswith(ext):
-                thumb_exists = os.path.exists(thumb_path)                
+                thumb_exists = os.path.exists(thumb_path)
                 for html5_ext in supported_html5_movietypes:
                     media.append(
                         {
@@ -169,5 +308,24 @@ class FolderListing(Resource):
             "media": media,
             "folders": folders,
         }
+
+        return result, 200
+
+
+@api.route("/create/")
+class FolderCreate(Resource):
+    """
+    Create folder resources
+    """
+
+    @api.doc("Folder Create")
+    # @api.expect(folder_query, validate=False)
+    @requires_access_level(ACCESS["admin"])
+    @api.doc(params={"path": "Folder path"})
+    def put(self, **kwargs):
+
+        path = request.args.get("path", "")
+
+        result = create_folder(path)
 
         return result, 200

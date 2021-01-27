@@ -12,6 +12,10 @@
           <div class="p-mt-4">
             <Button label="Logout" icon="pi pi-times" iconPos="left" @click="go('logout')" />
           </div>
+          <div class="p-mt-4" v-if="getNumberOfItemsSelected">
+            <Button @click="clearSelection()" icon="pi pi-times" iconPos="right" class="p-button-raised p-button-rounded" />
+            {{ getNumberOfItemsSelected }} items selected
+          </div>
         </template>
       </Card>
     </Sidebar>
@@ -56,6 +60,9 @@ export default {
     this.$refs.castButton.appendChild(btn);
   },
   methods: {
+    clearSelection() {
+      this.$store.commit('clearItemsSelected');
+    },
     go(to) {
       this.sideBarVisible = false;
 
@@ -74,7 +81,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['role']),
+    ...mapGetters(['role', 'getNumberOfItemsSelected']),
 
     fixedPath() {
       return this.path || [];

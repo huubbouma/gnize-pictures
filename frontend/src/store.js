@@ -14,6 +14,7 @@ const store = createStore({
     showFileOperations: false,
     showVideos: true,
     showPictures: true,
+    itemsSelected: {}, // should be a Set() ?
     itemsToDelete: {}, // should be a Set() ?
     nefItemsToDelete: {}, // should be a Set() ?
   },
@@ -84,6 +85,25 @@ const store = createStore({
     },
     clearNefItemsToDelete(state) {
       state.nefItemsToDelete = {};
+    },
+    addItemSelected(state, item) {
+      const key = item.path;
+      state.itemsSelected[key] = item;
+    },
+    removeItemSelected(state, item) {
+      const key = item.path;
+      delete state.itemsSelected[key];
+    },
+    toggleItemsSelected(state, item) {
+      const key = item.path;
+      if (key in state.itemsSelected) {
+        delete state.itemsSelected[key];
+      } else {
+        state.itemsSelected[key] = item;
+      }    
+    },
+    clearItemsSelected(state) {
+      state.itemsSelected = {};
     },
     setShowVideos(state, payload) {
       state.showVideos = payload;
@@ -257,6 +277,13 @@ const store = createStore({
     getShowPictures(state) {
       return state.showPictures;
     },
+    getItemsSelected(state) {
+      return state.itemsSelected;
+    },
+    getNumberOfItemsSelected(state) {
+      return state.itemsSelected ? Object.keys(state.itemsSelected).length : 0;
+    },
+
   },
 });
 
@@ -271,6 +298,7 @@ store.subscribe((mutation, state) => {
     showPictures: state.showPictures,
     itemsToDelete: state.itemsToDelete,
     nefItemsToDelete: state.nefItemsToDelete,
+    itemsSelected: state.itemsSelected,
   };
 
   localStorage.setItem('store', JSON.stringify(itemsToStore));

@@ -1,23 +1,38 @@
 <template>
   <div class="wrapper">
     <ul class="gallery">
-      <li :ref="item.id" class="gallery-panel" v-for="(item, index) in media" :key="item.path">
+      <li
+        :ref="item.id"
+        class="gallery-panel"
+        :class="{ selected: isSelected(item) }"
+        v-for="(item, index) in media"
+        :key="item.path"
+      >
         <template v-if="!itemId">
           <transition name="fade" appear>
             <div class="image-wrapper" v-show="loadedImages[item.id]">
               <img
-                @click="showInOverlay(index)"
+                @click="selectOrshowInOverlay(index, item)"
                 :src="item.thumb"
                 v-loaded-if-complete="loadedImages[item.id]"
                 @load="loadedImages[item.id] = true"
               />
+              <div class="selection-overlay" @click="selectOrshowInOverlay(index, item)" />
               <i
-                @click="showInOverlay(index)"
+                @click="selectOrshowInOverlay(index, item)"
                 v-if="item.type === 'video' && item.hasThumb"
                 class="indicator pi pi-chevron-circle-right"
               ></i>
+              <SelectItem :item="item" :keyHandler="false" />
               <DeleteItem :item="item" :keyHandler="false" />
               <NefItem :item="item" :keyHandler="false" />
+              <Button
+                v-if="item.path in getItemsSelected"
+                @click="showInOverlay(index)"
+                icon="pi pi-search-plus"
+                iconPos="right"
+                class="button-show-item p-button-raised p-button-rounded"
+              />
             </div>
           </transition>
         </template>
@@ -38,12 +53,13 @@
 import { mapGetters } from 'vuex';
 import Overlay from './Overlay.vue';
 import DeleteItem from './DeleteItem.vue';
+import SelectItem from './SelectItem.vue';
 import NefItem from './NefItem.vue';
 
 export default {
   name: 'Gallery',
 
-  components: { Overlay, DeleteItem, NefItem },
+  components: { Overlay, DeleteItem, NefItem, SelectItem },
 
   props: {
     media: {
@@ -64,8 +80,9 @@ export default {
     };
   },
   computed: {
-    ...mapGetters(['currentItem', 'getItemsToDelete']),
+    ...mapGetters(['currentItem', 'getItemsSelected', 'getNumberOfItemsSelected']),
   },
+
   watch: {
     media(newValue) {
       newValue.forEach((element) => {
@@ -93,6 +110,9 @@ export default {
     },
   },
   methods: {
+    isSelected(item) {
+      return item.path in this.getItemsSelected;
+    },
     loadImage(item) {
       console.log('loaded: loadImage');
       this.loadedImages[item.id] = true;
@@ -106,6 +126,13 @@ export default {
       this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
     },
 
+    selectOrshowInOverlay(index, item) {
+      if (this.getNumberOfItemsSelected) {
+        return this.$store.commit('toggleItemsSelected', item);
+      }
+      return this.showInOverlay(index);
+    },
+
     showInOverlay(index) {
       this.currentIndex = index;
       this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
@@ -117,6 +144,10 @@ export default {
       // this.$store.commit('setCurrentItem', null);
       this.$router.go(-1);
     },
+    // toggleSelect(item) {
+    //   this.$store.commit('setCurrentItem', this.media[this.currentIndex]);
+    //   toggleSelect
+    // }
   },
   mounted() {
     this.currentIndex = 0;
@@ -126,7 +157,9 @@ export default {
 
 <style lang="scss" scoped>
 .image-wrapper {
+  position: relative;
   transition-duration: 0.5s;
+  background-color: #e7f0fe;
 }
 
 .gallery-panel {
@@ -137,6 +170,12 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
+}
+
+.button-show-item {
+  position: absolute;
+  bottom: 0.3rem;
+  right: 0.3rem;
 }
 
 .nef-item {
@@ -159,12 +198,53 @@ ul {
 
 li {
   user-select: none;
-  height: 40vh;
+  // height: 40vh;
   flex-grow: 0;
   // flex-grow: 1;
+  padding: 0.1rem;
+  overflow: hidden;
+  width: auto;
+
+  &.selected {
+    img {
+      transform: scale(0.9, 0.9);
+    }
+  }
+
+  .select-item {
+    // display: none;
+    visibility: hidden;
+    position: absolute;
+    left: 2%;
+    top: 0;
+    color: white;
+    font-size: 3rem;
+    &.selected {
+      visibility: initial;
+    }
+  }
+
+  .selection-overlay {
+    visibility: hidden;
+  }
 
   &:hover {
     cursor: pointer;
+
+    .selection-overlay {
+      visibility: initial;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      position: absolute;
+      background: rgb(0, 0, 0);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(255, 255, 255, 0) 30%);
+    }
+
+    .select-item {
+      visibility: initial;
+    }
   }
 
   .indicator {
@@ -173,17 +253,18 @@ li {
     top: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 3rem;    
+    font-size: 3rem;
   }
 }
 
 img {
   user-select: none;
-  max-height: 100%;
-  min-width: 100%;
+  max-height: auto;
+  height: auto;
+  width: 100%;
   object-fit: cover;
   vertical-align: bottom;
-  padding: 0.1rem;
+  // padding: 0.1rem;
 }
 
 // ADVANCED

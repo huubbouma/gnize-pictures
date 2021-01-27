@@ -102,6 +102,10 @@ export default {
       }
     },
     castItem() {
+      if (!window.cast) {
+        return;
+      }
+
       const castContext = window.cast.framework.CastContext.getInstance();
       if (castContext && castContext.getCastState() === 'CONNECTED') {
 
