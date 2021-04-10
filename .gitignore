@@ -2,7 +2,8 @@ mediaserver.db
 deploy.sh
 .DS_Store
 node_modules
-**/dist
+**/dist/
+backend.log
 
 NENV
 # local env files
