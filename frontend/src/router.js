@@ -1,6 +1,5 @@
 import { createWebHistory, createRouter } from 'vue-router';
 import Main from '@/views/Main.vue';
-import Admin from '@/views/Admin.vue';
 import store from './store';
 import Login from './views/Login.vue';
 
@@ -36,16 +35,6 @@ const routes = [
     component: Login,
     meta: {
       requiresAuth: false,
-    },
-  },
-  {
-    path: '/@admin',
-    name: 'Admin',
-    props: false,
-    component: Admin,
-    meta: {
-      requiresAuth: true,
-      requiresAccess: 'admin',
     },
   },
 ];

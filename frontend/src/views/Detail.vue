@@ -33,6 +33,5 @@ export default {
       this.$store.commit('setCurrentItem', null);
     },
   },
-
 };
 </script>

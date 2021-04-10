@@ -23,6 +23,14 @@ export default class MediaService {
     return axios.post(url);
   }
 
+  static createFolder(path) {
+    const formData = {
+      path: decodeURI(path),
+    };
+    const url = `${process.env.VUE_APP_MEDIASERVER_URL}/folder/create/`;
+    return axios.put(url, formData);
+  }
+
   static delete(item) {
     const formData = {
       path: decodeURI(item.path),

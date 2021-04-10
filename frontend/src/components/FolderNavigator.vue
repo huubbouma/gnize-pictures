@@ -1,6 +1,8 @@
 <template>
   <div class="wrapper">
-    <Breadcrumb :home="home" :model="breadcrumItems" />
+    <div id="sticky-nav" :class="{ sticky: stickyActive }">
+      <Breadcrumb :home="home" :model="breadcrumItems" />
+    </div>
 
     <ProgressSpinner v-if="loading" />
 
@@ -8,8 +10,19 @@
       <ul>
         <li v-for="folder in listing.folders" :key="folder.id">
           <router-link :to="{ name: 'Main', params: { path: getPath(folder.id) } }">
-            <Chip :label="folder.name" />
+            <Button>
+              {{ folder.name }}
+            </Button>
           </router-link>
+        </li>
+        <li class="new-folder-item" v-if="isAdmin && showFileOperations">
+          <Inplace :active="showNewMapInplace" :closable="true" @open="showNewMapInplace = true">
+            <template #display>Nieuwe map..</template>
+            <template #content>
+              <InputText v-model="newFolderName" autoFocus />
+              <Button :disabled="!newFolderName" @click="createNewFolder" icon="pi pi-check" />
+            </template>
+          </Inplace>
         </li>
       </ul>
 
@@ -32,6 +45,7 @@
 <script>
 import { mapGetters } from 'vuex';
 import Gallery from './Gallery.vue';
+import MediaService from '../services/MediaService';
 
 const videoIcon = require('@/assets/video-icon.png');
 
@@ -46,6 +60,10 @@ export default {
       required: false,
       type: String,
     },
+    reload: {
+      required: false,
+      type: Number,
+    },
   },
 
   data() {
@@ -56,10 +74,22 @@ export default {
       // showVideos: true,
       loading: true,
       error: false,
+      stickyActive: false,
+      newFolderName: null,
+      showNewMapInplace: false,
     };
   },
   components: { Gallery },
   methods: {
+    createNewFolder() {
+      this.showNewMapInplace = false;
+      const newPath = this.getPath(this.newFolderName);
+      const folderPath = encodeURIComponent(newPath.join('/'));
+      MediaService.createFolder(folderPath).then(() => {
+        this.newFolderName = '';
+        this.getListing();
+      });
+    },
     getPath(item) {
       const newPath = this.path.map((it) => {
         const decodedItem = decodeURIComponent(decodeURIComponent(it));
@@ -95,7 +125,13 @@ export default {
     },
   },
   computed: {
-    ...mapGetters(['currentItem', 'getShowPictures', 'getShowVideos']),
+    ...mapGetters([
+      'currentItem',
+      'getShowPictures',
+      'getShowVideos',
+      'showFileOperations',
+      'isAdmin',
+    ]),
 
     showVideos: {
       get() {
@@ -196,6 +232,9 @@ export default {
                 src: `${
                   process.env.VUE_APP_MEDIASERVER_URL
                 }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=web`,
+                original: `${
+                  process.env.VUE_APP_MEDIASERVER_URL
+                }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=original`,
                 thumb: `${
                   process.env.VUE_APP_MEDIASERVER_URL
                 }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=thumbnail`,
@@ -226,6 +265,15 @@ export default {
   mounted() {
     this.getListing();
 
+    window.document.onscroll = () => {
+      const navBar = document.getElementById('sticky-nav');
+      if (window.scrollY > navBar.offsetTop) {
+        this.stickyActive = true;
+      } else {
+        this.stickyActive = false;
+      }
+    };
+
     // const cleanPath = this.path.map((item) => {
     //   const decodedItem = decodeURIComponent(decodeURIComponent(item));
     //   return encodeURIComponent(decodedItem);
@@ -253,11 +301,26 @@ export default {
       this.listing = [];
       this.getListing();
     },
+    reload() {
+      this.listing = [];
+      this.getListing();
+    },
   },
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+.sticky {
+  position: fixed; /* fixing the position takes it out of html flow - knows
+                   nothing about where to locate itself except by browser
+                   coordinates */
+  left: 0em; /* top left corner should start at leftmost spot */
+  top: 0; /* top left corner should start at topmost spot */
+  width: 100vw; /* take up the full browser width */
+  z-index: 1; /* high z index so other content scrolls underneath */
+  height: 100px; /* define height for content */
+}
+
 .filter {
   color: lightgray;
   display: flex;
@@ -276,11 +339,18 @@ li {
   list-style: none;
   user-select: none;
   padding-bottom: 0.5em;
+  a {
+    text-decoration: none;
+  }
+  &.new-folder-item {
+    padding-top: 0.5em;
+    color: #aaa;
+  }
 }
 
-li a {
-  color: lightgray;
-}
+// li input {
+//   color: lightgray;
+// }
 .hist {
   color: white;
 }

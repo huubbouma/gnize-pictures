@@ -324,7 +324,8 @@ class FolderCreate(Resource):
     @api.doc(params={"path": "Folder path"})
     def put(self, **kwargs):
 
-        path = request.args.get("path", "")
+        params = request.get_json()
+        path = params.get("path", "")
 
         result = create_folder(path)
 

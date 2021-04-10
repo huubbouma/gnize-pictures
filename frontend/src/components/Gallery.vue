@@ -24,7 +24,7 @@
                 class="indicator pi pi-chevron-circle-right"
               ></i>
               <SelectItem :item="item" :keyHandler="false" />
-              <DeleteItem :item="item" :keyHandler="false" />
+              <!-- <DeleteItem :item="item" :keyHandler="false" /> -->
               <NefItem :item="item" :keyHandler="false" />
               <Button
                 v-if="item.path in getItemsSelected"
@@ -52,14 +52,14 @@
 <script>
 import { mapGetters } from 'vuex';
 import Overlay from './Overlay.vue';
-import DeleteItem from './DeleteItem.vue';
+// import DeleteItem from './DeleteItem.vue';
 import SelectItem from './SelectItem.vue';
 import NefItem from './NefItem.vue';
 
 export default {
   name: 'Gallery',
 
-  components: { Overlay, DeleteItem, NefItem, SelectItem },
+  components: { Overlay, NefItem, SelectItem },
 
   props: {
     media: {
@@ -114,7 +114,6 @@ export default {
       return item.path in this.getItemsSelected;
     },
     loadImage(item) {
-      console.log('loaded: loadImage');
       this.loadedImages[item.id] = true;
     },
     showPrevious() {

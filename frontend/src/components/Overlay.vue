@@ -1,6 +1,6 @@
 <template>
   <div v-if="item" ref="lightbox" class="lightbox" @click.self="closeLightbox()" tabindex="0">
-    <img v-if="item.type === 'image'" :src="item.src" />
+    <img v-longpress="showActions" v-if="item.type === 'image'" :src="item.src" />
     <video ref="video" controls autoplay v-if="item.type === 'video'">
       <source
         v-for="(src, index) of item.sources"
@@ -16,19 +16,26 @@
     <div class="arrow" id="right-arrow" v-on:click="next">
       <i class="pi pi-arrow-circle-right" style="font-size: 3em"></i>
     </div>
-    <DeleteItem :item="item" :keyHandler="true" />
+    <!-- <DeleteItem :item="item" :keyHandler="true" /> -->
     <NefItem :item="item" :keyHandler="true" />
+
+    <Dialog v-model:visible="displayDialog">
+      <template #header>
+        <h4>Actions</h4>        
+      </template>
+      <a :href="item.original">Original Image</a>
+    </Dialog>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
-import DeleteItem from './DeleteItem.vue';
+// import DeleteItem from './DeleteItem.vue';
 import NefItem from './NefItem.vue';
 
 export default {
   name: 'Overlay',
-  components: { DeleteItem, NefItem },
+  components: { NefItem },
 
   emits: ['close', 'previous', 'next'],
   props: {
@@ -39,12 +46,16 @@ export default {
   data() {
     return {
       startTouch: null,
+      displayDialog: false,
     };
   },
   computed: {
     ...mapGetters(['getToken']),
   },
   methods: {
+    showActions() {
+      this.displayDialog = true;
+    },
     closeLightbox() {
       this.$emit('close');
     },
@@ -108,7 +119,6 @@ export default {
 
       const castContext = window.cast.framework.CastContext.getInstance();
       if (castContext && castContext.getCastState() === 'CONNECTED') {
-
         const castSession = castContext.getCurrentSession();
 
         let mediaUrl = this.item.src;
@@ -120,15 +130,15 @@ export default {
           mediaUrl = contentItem.src;
           // mediaType = 'video/mp4';
           // mediaType = 'video/mp4; codecs="avc1.42E01E, mp4a.40.5"'
-          mediaType = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'
+          mediaType = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
         }
 
-        console.log(`src: ${mediaUrl}`);
-        console.log(`type: ${mediaType}`);
+        // console.log(`src: ${mediaUrl}`);
+        // console.log(`type: ${mediaType}`);
 
         // chromecast can't handle authentication header for single media items.. whaat?!
         // but our backend can handle a token in the URL as a get parameter so add it here
-        mediaUrl = `${mediaUrl}&token=${this.getToken}`;      
+        mediaUrl = `${mediaUrl}&token=${this.getToken}`;
 
         const mediaInfo = new window.chrome.cast.media.MediaInfo(mediaUrl, mediaType);
         const request = new window.chrome.cast.media.LoadRequest(mediaInfo);

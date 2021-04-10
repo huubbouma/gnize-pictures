@@ -1,21 +1,29 @@
 <template>
   <div>
-    <FolderNavigator :path="fixedPath" :itemId="itemId" />
+    <FolderNavigator :reload="reloadFolder" :path="fixedPath" :itemId="itemId" />
 
     <Sidebar v-model:visible="sideBarVisible" position="right">
       <Card>
         <template #title>Menu</template>
         <template #content>
-          <div class="p-mt-4" v-if="role.includes('admin')">
-            <Button label="Admin" icon="pi pi-cog" iconPos="left" @click="go('admin')" />
-          </div>
           <div class="p-mt-4">
             <Button label="Logout" icon="pi pi-times" iconPos="left" @click="go('logout')" />
           </div>
-          <div class="p-mt-4" v-if="getNumberOfItemsSelected">
-            <Button @click="clearSelection()" icon="pi pi-times" iconPos="right" class="p-button-raised p-button-rounded" />
-            {{ getNumberOfItemsSelected }} items selected
-          </div>
+        </template>
+      </Card>
+
+      <Card v-if="role.includes('admin')">
+        <template #title>Admin</template>
+        <template #content>
+          <ToggleButton
+            v-model="showFileOperations"
+            onLabel="Toon bestandsoperaties"
+            offLabel="Geen bestandsoperaties"
+            onIcon="pi pi-check"
+            offIcon="pi pi-times"
+          />
+
+          <Admin @items-removed="reloadFolder++"></Admin>
         </template>
       </Card>
     </Sidebar>
@@ -24,22 +32,25 @@
       <div ref="castButton"></div>
     </div>
 
-    <Button
-      icon="pi pi-cog"
-      class="p-button-rounded p-button-info p-button-text settings-button"
-      @click="sideBarVisible = true"
-    />
+    <div class="settings-button-wrapper">
+      <Button
+        icon="pi pi-cog"
+        class="p-button-rounded p-button-info p-button-text settings-button"
+        @click="sideBarVisible = true"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import FolderNavigator from '@/components/FolderNavigator.vue';
+import Admin from '@/components/Admin.vue';
 import { mapGetters } from 'vuex';
 
 export default {
   name: 'Main',
 
-  components: { FolderNavigator },
+  components: { FolderNavigator, Admin },
   props: {
     path: {
       required: false,
@@ -53,6 +64,7 @@ export default {
   data() {
     return {
       sideBarVisible: false,
+      reloadFolder: 0,
     };
   },
   mounted() {
@@ -67,9 +79,6 @@ export default {
       this.sideBarVisible = false;
 
       switch (to) {
-        case 'admin':
-          this.$router.push({ name: 'Admin' });
-          break;
         case 'logout':
           this.$router.push({ name: 'Login' });
           break;
@@ -86,21 +95,35 @@ export default {
     fixedPath() {
       return this.path || [];
     },
+
+    showFileOperations: {
+      get() {
+        return this.$store.getters.showFileOperations;
+      },
+      set(value) {
+        this.$store.commit('setShowFileOperations', value);
+      },
+    },
   },
   watch: {},
 };
 </script>
 
-<style lang="scss" scoped>
-.settings-button {
-  position: absolute;
+<style lang="scss">
+.p-sidebar {
+  overflow: scroll;
+}
+.settings-button-wrapper {
+  position: fixed;
   right: 0.5em;
   top: 0.5em;
+  z-index: 2;
 }
 .cast-button-wrapper {
   width: 1.3em;
-  position: absolute;
+  position: fixed;
   right: 2.5em;
   top: 1em;
+  z-index: 2;
 }
 </style>

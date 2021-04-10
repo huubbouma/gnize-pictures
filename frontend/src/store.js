@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createStore } from 'vuex';
-import throttle from 'lodash.throttle';
+// import throttle from 'lodash.throttle';
 import MediaService from './services/MediaService';
 
 const store = createStore({
@@ -15,7 +15,6 @@ const store = createStore({
     showVideos: true,
     showPictures: true,
     itemsSelected: {}, // should be a Set() ?
-    itemsToDelete: {}, // should be a Set() ?
     nefItemsToDelete: {}, // should be a Set() ?
   },
 
@@ -62,19 +61,6 @@ const store = createStore({
     setShowFileOperations(state, payload) {
       state.showFileOperations = payload;
     },
-
-    addItemToDelete(state, item) {
-      const key = item.path;
-      state.itemsToDelete[key] = item;
-    },
-    removeItemToDelete(state, item) {
-      const key = item.path;
-      delete state.itemsToDelete[key];
-    },
-    clearItemsToDelete(state) {
-      state.itemsToDelete = {};
-    },
-
     addNefItemToDelete(state, item) {
       const key = item.path;
       state.nefItemsToDelete[key] = item;
@@ -193,16 +179,19 @@ const store = createStore({
       });
     },
 
-    REMOVE_ITEMS({ commit, getters }) {
-      const throttledDelete = throttle(MediaService.delete, 5000);
+    REMOVE_SELECTED_ITEMS({ commit, getters }) {
+      // const throttledDelete = throttle(MediaService.delete, 500);
       return new Promise((resolve, reject) => {
-        const todo = Object.values(getters.getItemsToDelete);
+        const todo = Object.values(getters.getItemsSelected);
         const all = [];
         todo.forEach(item => {
           all.push(
-            throttledDelete(item).then(() => {
-              commit('removeItemToDelete', item);
-            }),
+            // throttledDelete(item).then(() => {
+            //   commit('removeItemSelected', item);
+            // }),
+            MediaService.delete(item).then(() => {
+              commit('removeItemSelected', item);
+            }),            
           );
         });
         Promise.all(all)
@@ -210,6 +199,7 @@ const store = createStore({
             resolve();
           })
           .catch(error => {
+            console.log(error);
             reject(error);
           });
       });
@@ -265,9 +255,6 @@ const store = createStore({
     showFileOperations(state) {
       return state.showFileOperations;
     },
-    getItemsToDelete(state) {
-      return state.itemsToDelete;
-    },
     getNefItemsToDelete(state) {
       return state.nefItemsToDelete;
     },
@@ -296,7 +283,6 @@ store.subscribe((mutation, state) => {
     showFileOperations: state.showFileOperations,
     showVideos: state.showVideos,
     showPictures: state.showPictures,
-    itemsToDelete: state.itemsToDelete,
     nefItemsToDelete: state.nefItemsToDelete,
     itemsSelected: state.itemsSelected,
   };
