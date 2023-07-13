@@ -86,7 +86,7 @@ const store = createStore({
         delete state.itemsSelected[key];
       } else {
         state.itemsSelected[key] = item;
-      }    
+      }
     },
     clearItemsSelected(state) {
       state.itemsSelected = {};
@@ -180,18 +180,14 @@ const store = createStore({
     },
 
     REMOVE_SELECTED_ITEMS({ commit, getters }) {
-      // const throttledDelete = throttle(MediaService.delete, 500);
       return new Promise((resolve, reject) => {
         const todo = Object.values(getters.getItemsSelected);
         const all = [];
         todo.forEach(item => {
           all.push(
-            // throttledDelete(item).then(() => {
-            //   commit('removeItemSelected', item);
-            // }),
             MediaService.delete(item).then(() => {
               commit('removeItemSelected', item);
-            }),            
+            }),
           );
         });
         Promise.all(all)
@@ -204,6 +200,30 @@ const store = createStore({
           });
       });
     },
+
+    MOVE_SELECTED_ITEMS({ commit, getters }, { folderPath }) {
+      const osFolderPath = encodeURIComponent(folderPath.join('/'));
+      return new Promise((resolve, reject) => {
+        const todo = Object.values(getters.getItemsSelected);
+        const all = [];
+        todo.forEach(item => {
+          all.push(
+            MediaService.move(item, osFolderPath).then(() => {
+              commit('removeItemSelected', item);
+            }),
+          );
+        });
+        Promise.all(all)
+          .then(() => {
+            resolve();
+          })
+          .catch(error => {
+            console.log(error);
+            reject(error);
+          });
+      });
+    },
+
   },
 
   getters: {

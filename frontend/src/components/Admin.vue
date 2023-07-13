@@ -1,21 +1,30 @@
 <template>
   <div>
     <div class="p-mt-4 p-mb-4" v-if="getNumberOfItemsSelected">
-      <Button
-        @click="clearSelection()"
-        icon="pi pi-times"
-        iconPos="right"
-        class="p-button-raised p-button-rounded"
-      />
+      <Button @click="clearSelection()" icon="pi pi-times" iconPos="right" class="p-button-raised p-button-rounded" />
       {{ getNumberOfItemsSelected }} items selected
     </div>
 
     <div class="p-mt-5" v-if="getNumberOfItemsSelected > 0">
-      <Button
-        label="Verwijder geselecteerde items"
-        class="p-button-danger p-mr-1"
-        @click="removeSelected"
-      />
+
+      <Inplace :active="showDeleteItemsInplace" :closable="true" @open="showDeleteItemsInplace = true">
+        <template #display>
+          <Button label="Verwijder geselecteerde items" @click="showDeleteItemsInplace = true" />
+        </template>
+        <template #content>
+          <Button label="Verwijder" icon="pi pi-trash" class="p-button-danger p-mr-1" @click="removeSelected" />
+        </template>
+      </Inplace>
+
+      <Inplace :active="showMoveItemsInplace" :closable="true" @open="showMoveItemsInplace = true">
+        <template #display>
+          <Button label="Verplaats geselecteerde items hierheen" @click="showMoveItemsInplace = true" />
+        </template>
+        <template #content>
+          <Button label="Verplaats" icon="pi pi-copy" class="p-button-danger p-mr-1" @click="moveSelected" />
+        </template>
+      </Inplace>
+
 
       <div v-if="getNumberOfItemsSelected > 0">
         <h2>Geselecteerde items</h2>
@@ -32,11 +41,7 @@
     </div>
 
     <div class="p-mt-5" v-if="hasNefItemsToDelete()">
-      <Button
-        label="Verwijder geselecteerde NEF items"
-        class="p-button-danger p-mr-1"
-        @click="removeSelectedNef"
-      />
+      <Button label="Verwijder geselecteerde NEF items" class="p-button-danger p-mr-1" @click="removeSelectedNef" />
       <Button label="Maak selectie leeg" class="p-button-warning" @click="clearNefSelection" />
 
       <div v-if="hasNefItemsToDelete()">
@@ -62,11 +67,20 @@ import NefItem from '@/components/NefItem.vue';
 
 export default {
   name: 'Admin',
+  props: {
+    path: {
+      required: true,
+      type: Array,
+    },
+  },
+
   data() {
     return {
       home: { icon: 'pi pi-home', to: '/' },
       breadcrumbs: [],
       emitWhenRemoved: false,
+      showDeleteItemsInplace: false,
+      showMoveItemsInplace: false,
     };
   },
   emits: ['items-removed'],
@@ -95,6 +109,7 @@ export default {
       alert('todo');
     },
     removeSelected() {
+      this.showDeleteItemsInplace = false;
       this.emitWhenRemoved = true;
 
       this.$store.dispatch('REMOVE_SELECTED_ITEMS').then(
@@ -109,6 +124,29 @@ export default {
           this.$toast.add({
             severity: 'warn',
             summary: 'Fout bij verwijderen bestanden',
+            detail: error.message,
+          });
+          this.emitWhenRemoved = false;
+        },
+      );
+    },
+
+    moveSelected() {
+      this.showMoveItemsInplace = false;
+      this.emitWhenRemoved = true;
+
+      this.$store.dispatch('MOVE_SELECTED_ITEMS', { folderPath: this.path }).then(
+        () => {
+          this.$toast.add({
+            severity: 'info',
+            summary: 'Bestanden verplaatst',
+            detail: `Bestanden zijn verplaatst`,
+          });
+        },
+        (error) => {
+          this.$toast.add({
+            severity: 'warn',
+            summary: 'Fout bij verplaatsen bestanden',
             detail: error.message,
           });
           this.emitWhenRemoved = false;
@@ -153,6 +191,7 @@ export default {
 .img-wrapper {
   position: relative;
 }
+
 .delete-item {
   position: absolute;
   top: 0;

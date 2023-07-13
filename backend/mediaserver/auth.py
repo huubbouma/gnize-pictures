@@ -15,7 +15,7 @@ import jwt
 from .models import db, User, ACCESS
 from .utils import requires_access_level, token_required
 
-from flask_restplus import Namespace, Resource, fields
+from flask_restx import Namespace, Resource, fields
 
 
 api = Namespace(

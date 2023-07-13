@@ -23,7 +23,7 @@
             offIcon="pi pi-times"
           />
 
-          <Admin @items-removed="reloadFolder++"></Admin>
+          <Admin @items-removed="reloadFolder++" :path="fixedPath"></Admin>
         </template>
       </Card>
     </Sidebar>

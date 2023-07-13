@@ -9,4 +9,4 @@ production.wsgi
 
 *.pyc
 __pycache__
-
+.python-version

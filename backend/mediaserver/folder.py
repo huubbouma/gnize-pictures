@@ -10,7 +10,7 @@ from functools import wraps
 
 import jwt
 from flask import current_app, jsonify, request
-from flask_restplus import Namespace, Resource, fields
+from flask_restx import Namespace, Resource, fields
 from flask_sqlalchemy import SQLAlchemy
 
 from .models import ACCESS, User
@@ -76,7 +76,7 @@ def cached_folder_path(path):
 
 
 def get_subfolders(path):
-    """ return subfolders in path """
+    """return subfolders in path"""
 
     path = unquote(path)
     path = folder_path(path)
@@ -169,7 +169,6 @@ def move_item(oldpath, newpath):
 
     # also the cached paths.. ignore all errors
     if result:
-
         fname = os.path.basename(oldpath)
         base_name = os.path.splitext(fname)[0]
 
@@ -206,11 +205,10 @@ def delete_empty_folder(path):
     error = None
 
     items = os.listdir(path)
-    if not items:
+    if items:
         result = False
         error = "Folder is not empty"
     else:
-
         try:
             os.rmdir(path)
         except (FileNotFoundError, OSError) as e:
@@ -231,7 +229,7 @@ def delete_empty_folder(path):
 
 
 def get_media(path):
-    """ return media in path """
+    """return media in path"""
 
     unquoted_path = unquote(path)
     path = folder_path(unquoted_path)
@@ -298,7 +296,6 @@ class FolderListing(Resource):
     @requires_access_level(ACCESS["user"])
     @api.doc(params={"path": "Media path"})
     def get(self, **kwargs):
-
         path = request.args.get("path", "")
 
         media = get_media(path)
@@ -323,10 +320,56 @@ class FolderCreate(Resource):
     @requires_access_level(ACCESS["admin"])
     @api.doc(params={"path": "Folder path"})
     def put(self, **kwargs):
-
         params = request.get_json()
         path = params.get("path", "")
 
         result = create_folder(path)
+
+        return result, 200
+
+
+@api.route("/remove/")
+class FolderRemove(Resource):
+    """
+    remove folder resources
+    """
+
+    @api.doc("Folder Remove")
+    # @api.expect(folder_query, validate=False)
+    @requires_access_level(ACCESS["admin"])
+    @api.doc(params={"path": "Folder path"})
+    def post(self, **kwargs):
+        params = request.get_json()
+        path = params.get("path", "")
+
+        result = delete_empty_folder(path)
+
+        if result['error']:
+            return result, 400
+
+        return result, 200
+
+
+@api.route("/rename/")
+class FolderRename(Resource):
+    """
+    rename folder resources
+    """
+
+    @api.doc("Folder Rename")
+    # @api.expect(folder_query, validate=False)
+    @requires_access_level(ACCESS["admin"])
+    @api.doc(
+        params={
+            "path": "Folder path",
+            "newpath": "New Folder path",
+        }
+    )
+    def post(self, **kwargs):
+        params = request.get_json()
+        path = params.get("path", "")
+        newpath = params.get("newpath", "")
+
+        result = rename_folder(path, newpath)
 
         return result, 200

@@ -7,7 +7,7 @@ import os
 
 from flask import Flask
 from flask_cors import CORS
-from flask_restplus import Api
+from flask_restx import Api
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .auth import api as auth_api

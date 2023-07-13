@@ -31,6 +31,14 @@ export default class MediaService {
     return axios.put(url, formData);
   }
 
+  static deleteFolder(path) {
+    const formData = {
+      path: decodeURI(path),
+    };
+    const url = `${process.env.VUE_APP_MEDIASERVER_URL}/folder/remove/`;
+    return axios.post(url, formData);
+  }
+
   static delete(item) {
     const formData = {
       path: decodeURI(item.path),
@@ -40,4 +48,15 @@ export default class MediaService {
     const url = `${process.env.VUE_APP_MEDIASERVER_URL}/media/${mtype}/`;
     return axios.post(url, formData);
   }
+
+  static move(item, destinationPath) {
+    const formData = {
+      path: decodeURI(item.path),
+      destination_path: decodeURI(destinationPath),
+      action: 'move',
+    };
+    const mtype = item.type === 'image' ? 'image' : 'movie';
+    const url = `${process.env.VUE_APP_MEDIASERVER_URL}/media/${mtype}/`;
+    return axios.post(url, formData);
+  }  
 }

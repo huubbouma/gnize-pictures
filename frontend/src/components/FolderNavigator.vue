@@ -24,6 +24,17 @@
             </template>
           </Inplace>
         </li>
+
+        <template v-if="folderIsEmpty()">
+          <li class="new-folder-item" v-if="isAdmin && showFileOperations">
+            <Inplace :active="showDeleteMapInplace" :closable="true" @open="showDeleteMapInplace = true">
+              <template #display>Verwijder deze map</template>
+              <template #content>
+                <Button @click="deleteFolder" icon="pi pi-trash" />
+              </template>
+            </Inplace>
+          </li>
+        </template>
       </ul>
 
       <div class="filter" v-if="listing.media && listing.media.length > 0">
@@ -77,10 +88,19 @@ export default {
       stickyActive: false,
       newFolderName: null,
       showNewMapInplace: false,
+      showDeleteMapInplace: false,
     };
   },
   components: { Gallery },
   methods: {
+
+    folderIsEmpty() {
+      if (this.listing.media && this.listing.folders  ) {
+        return this.listing.media.length + this.listing.folders.length === 0
+      }
+      return false;
+    },
+
     createNewFolder() {
       this.showNewMapInplace = false;
       const newPath = this.getPath(this.newFolderName);
@@ -90,6 +110,22 @@ export default {
         this.getListing();
       });
     },
+
+    parentFolder() {
+      if (this.breadcrumItems.length >= 2) {
+        return this.breadcrumItems[this.breadcrumItems.length - 2].to;
+      }
+      return "/";
+    },
+
+    deleteFolder() {
+      this.showDeleteMapInplace = false;
+      const folderPath = encodeURIComponent(this.path.join('/'));
+      MediaService.deleteFolder(folderPath).then(() => {
+        this.$router.push(this.parentFolder());
+      });
+    },
+
     getPath(item) {
       const newPath = this.path.map((it) => {
         const decodedItem = decodeURIComponent(decodeURIComponent(it));
@@ -201,19 +237,16 @@ export default {
                 path: `${folderPath}/${encodeURIComponent(item.id)}`,
                 sources: [
                   {
-                    src: `${
-                      process.env.VUE_APP_MEDIASERVER_URL
-                    }/media/movie/?path=${folderPath}/${encodeURIComponent(item.id)}&movie_type=${
-                      item.ext
-                    }`,
+                    src: `${process.env.VUE_APP_MEDIASERVER_URL
+                      }/media/movie/?path=${folderPath}/${encodeURIComponent(item.id)}&movie_type=${item.ext
+                      }`,
                     type: `video/${item.ext}`,
                   },
                 ],
                 hasThumb: item.thumb,
                 thumb: item.thumb
-                  ? `${
-                      process.env.VUE_APP_MEDIASERVER_URL
-                    }/media/movie/?path=${folderPath}/${encodeURIComponent(item.thumb)}&thumb=true`
+                  ? `${process.env.VUE_APP_MEDIASERVER_URL
+                  }/media/movie/?path=${folderPath}/${encodeURIComponent(item.thumb)}&thumb=true`
                   : videoIcon,
                 caption: item.name,
                 width: 800, // Required
@@ -229,15 +262,12 @@ export default {
                 path: `${folderPath}/${encodeURIComponent(item.id)}`,
                 type: 'image',
                 nef: item.nef,
-                src: `${
-                  process.env.VUE_APP_MEDIASERVER_URL
-                }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=web`,
-                original: `${
-                  process.env.VUE_APP_MEDIASERVER_URL
-                }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=original`,
-                thumb: `${
-                  process.env.VUE_APP_MEDIASERVER_URL
-                }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=thumbnail`,
+                src: `${process.env.VUE_APP_MEDIASERVER_URL
+                  }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=web`,
+                original: `${process.env.VUE_APP_MEDIASERVER_URL
+                  }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=original`,
+                thumb: `${process.env.VUE_APP_MEDIASERVER_URL
+                  }/media/image/?path=${folderPath}/${encodeURIComponent(item.id)}&size=thumbnail`,
                 caption: item.name,
               };
             }
@@ -311,22 +341,30 @@ export default {
 
 <style lang="scss">
 .sticky {
-  position: fixed; /* fixing the position takes it out of html flow - knows
+  position: fixed;
+  /* fixing the position takes it out of html flow - knows
                    nothing about where to locate itself except by browser
                    coordinates */
-  left: 0em; /* top left corner should start at leftmost spot */
-  top: 0; /* top left corner should start at topmost spot */
-  width: 100vw; /* take up the full browser width */
-  z-index: 1; /* high z index so other content scrolls underneath */
-  height: 100px; /* define height for content */
+  left: 0em;
+  /* top left corner should start at leftmost spot */
+  top: 0;
+  /* top left corner should start at topmost spot */
+  width: 100vw;
+  /* take up the full browser width */
+  z-index: 1;
+  /* high z index so other content scrolls underneath */
+  height: 100px;
+  /* define height for content */
 }
 
 .filter {
   color: lightgray;
   display: flex;
 }
+
 .filteritem {
   display: flex;
+
   label {
     margin: auto 1em;
   }
@@ -339,9 +377,11 @@ li {
   list-style: none;
   user-select: none;
   padding-bottom: 0.5em;
+
   a {
     text-decoration: none;
   }
+
   &.new-folder-item {
     padding-top: 0.5em;
     color: #aaa;
