@@ -1,15 +1,16 @@
 from functools import wraps
-from flask import url_for, request, redirect, session, current_app
-from .models import User
+
 import jwt
+from flask import current_app, request
+
+from .models import User
 
 
 def token_required(f):
     @wraps(f)
     def _verify(*args, **kwargs):
-
         if current_app.config["ANONYMOUS_ACCESS"]:
-            kwargs["user"] = User(email='bobdobalina@localhost', password='-', access=0)
+            kwargs["user"] = User(email="bobdobalina@localhost", password="-", access=0)
             return f(*args, **kwargs)
 
         token = request.headers.get("Authorization", "")
@@ -24,7 +25,7 @@ def token_required(f):
         }
 
         # if len(auth_headers) != 2:
-        #     return invalid_msg, 401        
+        #     return invalid_msg, 401
 
         try:
             # token = auth_headers[1]
@@ -46,7 +47,6 @@ def token_required(f):
 
 
 def requires_access_level(access_level):
-
     not_logged_in_msg = {"message": "Authentication required.", "authenticated": False}
     wrong_access_level = {
         "message": "Not allowed for this user.",
@@ -65,18 +65,19 @@ def requires_access_level(access_level):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-
             if current_app.config["ANONYMOUS_ACCESS"]:
-                kwargs["user"] = User(email='bobdobalina@localhost', password='-', access=0)
+                kwargs["user"] = User(
+                    email="bobdobalina@localhost", password="-", access=0
+                )
                 return f(*args, **kwargs)
 
-            try:                
+            try:
                 token = request.headers.get("Authorization", "")
                 if not token:
                     # try reading from cookie
-                    token = request.cookies.get('Authorization')
+                    token = request.cookies.get("Authorization")
                 if not token:
-                    token = request.args.get('token')
+                    token = request.args.get("token")
 
                 data = jwt.decode(
                     token, current_app.config["SECRET_KEY"], algorithms=["HS256"]

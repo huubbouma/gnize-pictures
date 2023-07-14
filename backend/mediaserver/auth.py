@@ -4,19 +4,15 @@ auth.py
   REST requests and responses
 """
 
-from functools import wraps
 from datetime import datetime, timedelta
 
-from flask import jsonify, request, current_app
-from flask.helpers import make_response
-
 import jwt
-
-from .models import db, User, ACCESS
-from .utils import requires_access_level, token_required
-
+from flask import current_app, request
+from flask.helpers import make_response
 from flask_restx import Namespace, Resource, fields
 
+from .models import ACCESS, User, db
+from .utils import requires_access_level, token_required
 
 api = Namespace(
     "auth",
@@ -73,7 +69,7 @@ class UserRegister(Resource):
 
 
 @api.route("/unregister/")
-class UserRegister(Resource):
+class UserUnRegister(Resource):
     """
     User unregister Resource
     """
@@ -94,7 +90,7 @@ class UserRegister(Resource):
 
 
 @api.route("/users/")
-class UserRegister(Resource):
+class UserList(Resource):
     """
     User List All Resource
     """
@@ -115,7 +111,6 @@ class UserVerify(Resource):
     @api.doc("Verify user")
     @token_required
     def post(self, user):
-
         token = jwt.encode(
             {
                 "sub": user.email,
@@ -147,7 +142,6 @@ class UserLogin(Resource):
     @api.doc("user login", security=None)
     @api.expect(user_auth, validate=True)
     def post(self):
-
         data = request.get_json()
         user = User.authenticate(**data)
 
@@ -165,10 +159,14 @@ class UserLogin(Resource):
             },
             current_app.config["SECRET_KEY"],
         )
-        return {
+        payload = {
             "user": {
                 "email": user.email,
                 "access": user.access_str,
                 "token": token,
             }
-        }, 200
+        }
+
+        res = make_response(payload)
+        res.set_cookie("Authorization", token)
+        return res
