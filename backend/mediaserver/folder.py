@@ -14,7 +14,7 @@ from flask_restx import Namespace, Resource, fields
 from flask_sqlalchemy import SQLAlchemy
 
 from .models import ACCESS, User
-from .utils import requires_access_level, token_required
+from .utils import limit_user_by_path, requires_access_level, token_required
 
 import json
 import os
@@ -294,16 +294,21 @@ class FolderListing(Resource):
     @api.doc("Folder Query")
     # @api.expect(folder_query, validate=False)
     @requires_access_level(ACCESS["user"])
+    @limit_user_by_path()
     @api.doc(params={"path": "Media path"})
-    def get(self, **kwargs):
+    def get(self, user, **kwargs):
         path = request.args.get("path", "")
 
         media = get_media(path)
         folders = get_subfolders(path)
 
+        allowed_folders = [
+            f for f in folders if user.is_path_allowed(f'{path}/{unquote(f["id"])}')
+        ]
+
         result = {
             "media": media,
-            "folders": folders,
+            "folders": allowed_folders,
         }
 
         return result, 200
@@ -318,6 +323,7 @@ class FolderCreate(Resource):
     @api.doc("Folder Create")
     # @api.expect(folder_query, validate=False)
     @requires_access_level(ACCESS["admin"])
+    @limit_user_by_path()
     @api.doc(params={"path": "Folder path"})
     def put(self, **kwargs):
         params = request.get_json()
@@ -337,6 +343,7 @@ class FolderRemove(Resource):
     @api.doc("Folder Remove")
     # @api.expect(folder_query, validate=False)
     @requires_access_level(ACCESS["admin"])
+    @limit_user_by_path()
     @api.doc(params={"path": "Folder path"})
     def post(self, **kwargs):
         params = request.get_json()
@@ -344,7 +351,7 @@ class FolderRemove(Resource):
 
         result = delete_empty_folder(path)
 
-        if result['error']:
+        if result["error"]:
             return result, 400
 
         return result, 200
@@ -359,6 +366,7 @@ class FolderRename(Resource):
     @api.doc("Folder Rename")
     # @api.expect(folder_query, validate=False)
     @requires_access_level(ACCESS["admin"])
+    @limit_user_by_path()
     @api.doc(
         params={
             "path": "Folder path",

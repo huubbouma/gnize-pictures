@@ -33,6 +33,7 @@ user_register = api.model(
         "email": fields.String(required=True, description="The email address"),
         "password": fields.String(required=True, description="The user password"),
         "access": fields.Integer(required=True, description="The user access level"),
+        "limit_paths": fields.String(required=False, description="limit_paths regex"),
     },
 )
 
@@ -169,4 +170,5 @@ class UserLogin(Resource):
 
         res = make_response(payload)
         res.set_cookie("Authorization", token)
+
         return res

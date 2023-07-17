@@ -16,6 +16,8 @@ cli = FlaskGroup(app)
 
 migrate = Migrate(app, db)
 
+# cli.add_command('db', MigrateCommand)
+
 
 @cli.command("db_upgrade")
 def db_upgrade():
@@ -33,7 +35,7 @@ def shell_ctx():
     )
 
 
-@app.cli.command("create_tables")
+@cli.command("create_tables")
 @with_appcontext
 def create_tables():
     db.create_all()

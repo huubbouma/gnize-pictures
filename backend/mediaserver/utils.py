@@ -46,6 +46,22 @@ def token_required(f):
     return _verify
 
 
+def _get_token_from_request(request):
+    token = request.headers.get("Authorization", "")
+    if not token:
+        # try reading from cookie
+        token = request.cookies.get("Authorization")
+    if not token:
+        token = request.args.get("token")
+    return token
+
+
+def _get_user_from_token(token):
+    data = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
+    user = User.query.filter_by(email=data["sub"]).first()
+    return user
+
+
 def requires_access_level(access_level):
     not_logged_in_msg = {"message": "Authentication required.", "authenticated": False}
     wrong_access_level = {
@@ -72,17 +88,13 @@ def requires_access_level(access_level):
                 return f(*args, **kwargs)
 
             try:
-                token = request.headers.get("Authorization", "")
-                if not token:
-                    # try reading from cookie
-                    token = request.cookies.get("Authorization")
-                if not token:
-                    token = request.args.get("token")
+                token = _get_token_from_request(request)
 
-                data = jwt.decode(
-                    token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
-                )
-                user = User.query.filter_by(email=data["sub"]).first()
+                if not token:
+                    return not_logged_in_msg, 401
+
+                user = _get_user_from_token(token)
+
                 if not user:
                     raise RuntimeError("User not found")
 
@@ -94,11 +106,31 @@ def requires_access_level(access_level):
                 return f(*args, **kwargs)
             except jwt.ExpiredSignatureError:
                 return expired_msg, 401  # 401 is Unauthorized HTTP status code
-            except jwt.InvalidTokenError as e:
+            except jwt.InvalidTokenError:
                 return invalid_msg, 401
             except Exception as e:
                 print(e)
                 return str(e), 500
+
+        return decorated_function
+
+    return decorator
+
+
+def limit_user_by_path(path_param="path"):
+    error_msg = {"message": "Path not allowed."}
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            path = request.args.get(path_param)
+            token = _get_token_from_request(request)
+            user = _get_user_from_token(token)
+
+            if not user.is_path_allowed(path):
+                return error_msg, 401
+
+            return f(*args, **kwargs)
 
         return decorated_function
 

@@ -3,9 +3,10 @@ models.py
 - Data classes for the surveyapi application
 """
 
-from flask_sqlalchemy import SQLAlchemy
+import re
 
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash, generate_password_hash
 
 db = SQLAlchemy()
 
@@ -21,17 +22,25 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     access = db.Column(db.Integer, nullable=False)
+    limit_paths = db.Column(db.String(255), nullable=True)
 
-    def __init__(self, email, password, access=ACCESS["guest"]):
+    def __init__(self, email, password, access=ACCESS["guest"], limit_paths=None):
         self.email = email
         self.password = generate_password_hash(password, method="sha256")
         self.access = access
+        self.limit_paths = limit_paths
 
     def is_admin(self):
         return self.access == ACCESS["admin"]
 
     def allowed(self, access_level):
         return self.access >= access_level
+
+    def is_path_allowed(self, path):
+        if self.limit_paths:
+            return re.match(self.limit_paths, path) is not None
+        else:
+            return True
 
     @property
     def access_str(self):
@@ -56,4 +65,5 @@ class User(db.Model):
             id=self.id,
             email=self.email,
             access=self.access_str,
+            limit_paths=self.limit_paths,
         )
