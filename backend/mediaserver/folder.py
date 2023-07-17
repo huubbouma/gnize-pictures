@@ -302,8 +302,10 @@ class FolderListing(Resource):
         media = get_media(path)
         folders = get_subfolders(path)
 
+        cur_path = '' if not path else f'{path}/'
+
         allowed_folders = [
-            f for f in folders if user.is_path_allowed(f'{path}/{unquote(f["id"])}')
+            f for f in folders if user.is_path_allowed(f'{cur_path}{unquote(f["id"])}')
         ]
 
         result = {
