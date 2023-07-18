@@ -186,7 +186,7 @@ def move_item(oldpath, newpath):
         old_thumb_path = os.path.join(cached_oldpath, thumb_name)
         new_thumb_path = os.path.join(cached_newpath, thumb_name)
         try:
-            os.rename(old_nef_path, new_nef_path)
+            os.rename(old_thumb_path, new_thumb_path)
         except:
             pass
 

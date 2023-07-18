@@ -223,6 +223,16 @@ def move_movie(movie_path, dest_folder_path):
     os.rename(real_movie_path, new_path)
     moved.append(real_movie_path)
 
+    cached_movie_path = cached_file_path(movie_path)
+    cached_folder = os.path.dirname(cached_movie_path)
+    new_cached_folder = cached_file_path(dest_folder_path)
+
+    thumbnail_fname = f".thumbnail.{base_name}.jpg"
+    thumbnail_path = os.path.join(cached_folder, thumbnail_fname)
+    new_thumbnail_path = os.path.join(new_cached_folder, thumbnail_fname)
+    if os.path.exists(thumbnail_path):
+        os.rename(thumbnail_path, new_thumbnail_path)
+
     for videoextension in VIDEO_EXTENSIONS:
         ext = ".{}".format(videoextension)
         fname = base_name + ext
@@ -232,14 +242,14 @@ def move_movie(movie_path, dest_folder_path):
             os.rename(fpath, new_path)
             moved.append(fpath)
 
-    cached_movie_path = cached_file_path(movie_path)
-    cached_folder = os.path.dirname(cached_movie_path)
-
     for videoextension in VIDEO_EXTENSIONS:
         fname = base_name + ".converted." + videoextension
         cached_path = os.path.join(cached_folder, fname)
+        new_cached_path = os.path.join(new_cached_folder, fname)
+        new_path = os.path.join(real_dest_path, fname)
         if os.path.exists(cached_path):
-            os.remove(cached_path)
+            os.makedirs(new_cached_folder, exist_ok=True)
+            os.rename(cached_path, new_cached_path)
 
     return moved
 
